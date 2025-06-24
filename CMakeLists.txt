@@ -20,6 +20,9 @@ option(AERA_BUILD_TESTS "Build Aera tests" OFF)
 option(AERA_BUILD_EXAMPLES "Build Aera examples" OFF)
 option(AERA_BUILD_DOCS "Build Aera documentation" OFF)
 
+# For testing purposes
+set(AERA_BUILD_TESTS ON)
+
 #----------------------------------------------------------------------------------------------------------------------
 # Build Settings
 #----------------------------------------------------------------------------------------------------------------------
@@ -37,12 +40,12 @@ endif()
 message(STATUS "Defining aera...")
 
 add_library(aera STATIC
-
-)
+    "aera.cpp"
+    "src/lexer/lexer.cpp")
 add_library(aera::aera ALIAS aera)
 
 # CLI executable
-add_executable(aera_cli src/main.cpp)
+add_executable(aera_cli aera.cpp "src/lexer/lexer.cpp")
 target_link_libraries(aera_cli aera::aera)
 
 message(STATUS "Finished defining aera.")
@@ -50,6 +53,7 @@ message(STATUS "Finished defining aera.")
 #----------------------------------------------------------------------------------------------------------------------
 # Target Properties & Linking
 #----------------------------------------------------------------------------------------------------------------------
+
 target_include_directories(aera
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -63,10 +67,11 @@ target_compile_features(aera PUBLIC cxx_std_20)
 #----------------------------------------------------------------------------------------------------------------------
 # Other Targets
 #----------------------------------------------------------------------------------------------------------------------
+
 if(AERA_BUILD_TESTS)
     message(STATUS "Building aera tests...")
     enable_testing()
-    #add_subdirectory(tests) 
+    add_subdirectory(tests) 
 endif()
 
 if(AERA_BUILD_EXAMPLES)
