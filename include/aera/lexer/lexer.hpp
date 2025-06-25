@@ -13,16 +13,6 @@ namespace aera::lexer {
 		~Lexer() = default;
 
 		std::vector<Token> tokenize();
-		char advance();
-		void read_token();
-		char peek();
-		char peek_next();
-		bool is_at_end();
-		void reset();
-		void set_input(const std::string& string);
-		int current_line() const;
-		int current_column() const;
-
 		bool has_error() const;
 
 	private:
@@ -32,9 +22,18 @@ namespace aera::lexer {
 		int start = 0;
 		int index = 0;
 		int line = 1;
-		int column = 1;
+		int start_col = 1;
+		int col = 1;
 
-		void add_token(TokenType type, Literal literal);
+		char advance();
+		void read_token();
+		char peek();
+		char peek_next();
+		bool is_at_end();
+		int current_line() const;
+		int current_column() const;
+
+		void add_token(TokenType type, const std::string& lexeme);
 		void add_token(TokenType type);
 		bool match(char expected);
 		void read_line_comment();

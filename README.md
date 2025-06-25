@@ -114,4 +114,4 @@ Aera follows the same evolutionary approach as C3's modernization of C, but for 
 
 ---
 
-*Aera is currently in early development. The language specification and implementation are subject to change as we refine the design based on real-world usage and feedback.*
+*Aera is currently in early development. The language specification and implementation are subject to change as I refine the design based on real-world usage and feedback.*

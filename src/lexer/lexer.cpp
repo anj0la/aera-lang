@@ -6,13 +6,19 @@ namespace aera::lexer {
 	Lexer::Lexer(std::string p_input) : input(p_input) {}
 
 	std::vector<Token> Lexer::tokenize() {
+
 		while (!is_at_end()) {
 			start = index;
+			start_col = col;
 			read_token();
 		}
 
-		tokens.push_back(Token());
+		tokens.push_back(Token(TokenType::Eof, "", line, col));
 		return tokens;
+	}
+
+	bool Lexer::has_error() const {
+		return had_error;
 	}
 
 	char Lexer::advance() {
@@ -21,16 +27,16 @@ namespace aera::lexer {
 		switch (ch) {
 			case '\n':
 				line++;
-				column = 1;
+				col = 1;
 				break;
 			case '\t':
-				column += 4;
+				col += 4;
 				break;
 			case '\r':
-				column = 1;
+				col = 1;
 				break;
 			default:
-				column++;
+				col++;
 				break;
 			}
 		
@@ -151,6 +157,7 @@ namespace aera::lexer {
 				}
 				else {
 					error("Unexpected character.");
+					add_token(TokenType::Illegal);
 				}
 				break;
 		}
@@ -176,32 +183,21 @@ namespace aera::lexer {
 		return index >= input.length();
 	}
 
-	void Lexer::reset() {
-		start = 0;
-		index = 0;
-		line = 1;
-		tokens.clear();
-	}
-
-	void Lexer::set_input(const std::string& string) {
-		input = string;
-	}
-
 	int Lexer::current_line() const {
 		return line;
 	}
 
 	int Lexer::current_column() const {
-		return column;
+		return col;
 	}
 
-	void Lexer::add_token(TokenType type, Literal literal) {
-		std::string text = input.substr(start, index);
-		tokens.push_back(Token(type, text, literal, line, column));
+	void Lexer::add_token(TokenType type, const std::string& lexeme) {
+		tokens.push_back(Token(type, lexeme, line, start_col));
 	}
 
 	void Lexer::add_token(TokenType type) {
-		add_token(type);
+		std::string text = input.substr(start, index - start);
+		tokens.push_back(Token(type, text, line, start_col));
 	}
 
 	bool Lexer::match(char expected) {
@@ -213,7 +209,7 @@ namespace aera::lexer {
 			return false;
 		}
 
-		index++;
+		advance(); // to handle line and col
 		return true;
 	}
 
@@ -299,7 +295,7 @@ namespace aera::lexer {
 		}
 
 		advance(); // Consume closing '
-		add_token(TokenType::CharacterLiteral, ch);
+		add_token(TokenType::CharacterLiteral, std::string(1, ch));
 	}
 
 	void Lexer::read_string() {
@@ -348,25 +344,11 @@ namespace aera::lexer {
 	}
 	
 	void Lexer::read_number() {
-		// std::string num_as_str = input.substr(index - 1, index);
 		bool is_float = false;
 
 		while (is_digit(peek())) {
 			advance();
 		}
-
-		// first check for int suffix
-		// 123u32
-		// 5i8
-
-		// 58s
-		// 1a
-		// 1;
-
-
-		// Look for U / I or ., if NOT any of these things, we have an invalid integer
-
-		// Check for integer suffix
 
 		if ((peek() == 'u' && is_digit(peek_next())) || (peek() == 'i' && is_digit(peek_next()))) { // Case sensitive
 			advance(); // consume the suffix char
@@ -391,23 +373,18 @@ namespace aera::lexer {
 				while (is_digit(peek())) {
 					advance();
 				}
-
-				// 3.0f -> still valid
-				// 3.0f32 -> valid
-				// 3.0f64 -> valid
-			}
-
-			// If we are here, then NO suffix
-
-			std::string num_as_str = input.substr(start, index);
-
-			if (is_float) {
-				add_token(TokenType::FloatLiteral, num_as_str);
-			}
-			else {
-				add_token(TokenType::IntLiteral, num_as_str);
 			}
 		}
+
+		std::string num_as_str = input.substr(start, index - start);
+
+		if (is_float) {
+			add_token(TokenType::FloatLiteral, num_as_str);
+		}
+		else {
+			add_token(TokenType::IntLiteral, num_as_str);
+		}
+
 	}
 
 	void Lexer::read_identifier() {
@@ -415,7 +392,7 @@ namespace aera::lexer {
 			advance();
 		}
 
-		std::string text = input.substr(start, index);
+		std::string text = input.substr(start, index - start);
 		TokenType type;
 		auto it = keywords.find(text);
 
@@ -426,11 +403,7 @@ namespace aera::lexer {
 			type = TokenType::Identifier;
 		}
 
-		switch (type) {
-			case TokenType::True: add_token(type, true); break;
-			case TokenType::False: add_token(type, false); break;
-			default: add_token(type); break;
-		}
+		add_token(type);
 	}
 
 	bool Lexer::is_digit(char c) const {
@@ -457,12 +430,8 @@ namespace aera::lexer {
 	}
 
 	void Lexer::error(const std::string& message) {
-		std::cerr << "[" << line << ":" << column << "] Error: " << message << std::endl;
+		std::cerr << "[" << line << ":" << col << "] Error: " << message << std::endl;
 		had_error = true;
-	}
-
-	bool Lexer::has_error() const {
-		return had_error;
 	}
 
 }

@@ -40,12 +40,12 @@ endif()
 message(STATUS "Defining aera...")
 
 add_library(aera STATIC
-    "aera.cpp"
     "src/lexer/lexer.cpp")
+
 add_library(aera::aera ALIAS aera)
 
 # CLI executable
-add_executable(aera_cli aera.cpp "src/lexer/lexer.cpp")
+add_executable(aera_cli "aera.cpp")
 target_link_libraries(aera_cli aera::aera)
 
 message(STATUS "Finished defining aera.")

@@ -8,8 +8,14 @@ add_executable(lexer_tests
 
 target_link_libraries(
 	  lexer_tests
+	  PRIVATE
 	  aera::aera
-	  gtest_main
+	  GTest::gtest_main 
+)
+
+target_include_directories(lexer_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/tests
 )
 
 gtest_discover_tests(lexer_tests)

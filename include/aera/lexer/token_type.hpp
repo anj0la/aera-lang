@@ -61,7 +61,7 @@ namespace aera::lexer {
 		Import, Class, Struct, Enum, Abstract, Interface, Alias, Self, As,
 		True, False, Null, None, Print, Unsafe,
 
-		Eof
+		Illegal, Eof
 	};
 
     inline const std::unordered_map<std::string, TokenType> keywords = {
@@ -88,8 +88,8 @@ namespace aera::lexer {
         {"alias", TokenType::Alias},
         {"self", TokenType::Self},
         {"as", TokenType::As},
-        {"true", TokenType::True},
-        {"false", TokenType::False},
+        {"true", TokenType::BoolLiteral},
+        {"false", TokenType::BoolLiteral},
         {"null", TokenType::Null},
         {"none", TokenType::None},
         {"print", TokenType::Print},
