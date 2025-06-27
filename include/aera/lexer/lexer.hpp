@@ -40,6 +40,7 @@ namespace aera::lexer {
 		void read_block_comment();
 		void read_character();
 		void read_string();
+		void read_for_loop_pattern();
 		void read_number();
 		void read_identifier();
 		

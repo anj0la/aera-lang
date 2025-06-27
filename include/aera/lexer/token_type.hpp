@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 namespace aera::lexer {
@@ -44,7 +45,8 @@ namespace aera::lexer {
         // Other operators
 
         ArrowOp,                     // Used in functions to declare return type
-
+        RangeInclusiveOp,            // 0..=10, including 10 -> used in for loops
+        RangeExclusiveOp,            // 0..10, not including 10 -> used in for loops
         // Comments
 
         LineComment,                 // #
@@ -58,8 +60,8 @@ namespace aera::lexer {
 
 		Fn, Let, Mut, Const, Pub,
 		If, Else, For, While, Loop, Match, Break, Continue, Return,
-		Import, Class, Struct, Enum, Abstract, Interface, Alias, Self, As,
-		True, False, Null, None, Print, Unsafe,
+		Import, Class, Struct, Enum, Interface, Alias, Self, As,
+		In, True, False, Null, None, Cpp,
 
 		Illegal, Eof
 	};
@@ -83,16 +85,23 @@ namespace aera::lexer {
         {"class", TokenType::Class},
         {"struct", TokenType::Struct},
         {"enum", TokenType::Enum},
-        {"abstract", TokenType::Abstract},
         {"interface", TokenType::Interface},
         {"alias", TokenType::Alias},
         {"self", TokenType::Self},
         {"as", TokenType::As},
+        {"in", TokenType::In},
         {"true", TokenType::BoolLiteral},
         {"false", TokenType::BoolLiteral},
         {"null", TokenType::Null},
         {"none", TokenType::None},
-        {"print", TokenType::Print},
-        {"unsafe", TokenType::Unsafe}
+        {"cpp", TokenType::Cpp}
+    };
+
+    inline const std::unordered_set<std::string> valid_int_suffixes = {
+    "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64"
+    };
+    
+    inline const std::unordered_set<std::string> valid_float_suffixes = {
+        "f32", "f64"
     };
 }

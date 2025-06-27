@@ -58,7 +58,19 @@ namespace aera::lexer {
 			case '[': add_token(TokenType::LeftBracket); break;
 			case ']': add_token(TokenType::RightBracket); break;
 			case ',': add_token(TokenType::Comma); break;
-			case '.': add_token(TokenType::Period); break;
+			case '.':
+				if (match('.')) {
+					if (match('=')) {
+						add_token(TokenType::RangeInclusiveOp); // ..=
+					}
+					else {
+						add_token(TokenType::RangeExclusiveOp); // ..
+					}
+				}
+				else {
+					add_token(TokenType::Period);
+				}
+				break;
 			case ';': add_token(TokenType::Semicolon); break;
 			case ':': add_token(TokenType::Colon); break;
 
@@ -156,8 +168,9 @@ namespace aera::lexer {
 					read_identifier();
 				}
 				else {
-					error("Unexpected character.");
-					add_token(TokenType::Illegal);
+					had_error = true;
+					std::string bad_char(1, ch);
+					add_token(TokenType::Illegal, bad_char); // unexpected character
 				}
 				break;
 		}
@@ -220,20 +233,21 @@ namespace aera::lexer {
 	}
 
 	void Lexer::read_block_comment() {
-		while (!is_at_end()) {
-			if (peek() == '\n') {
-				error("Unterminated block comment.");
+		while (true) {
+			if (is_at_end()) {
+				had_error = true;
+				add_token(TokenType::Illegal, "Unterminated block comment.");
 				break;
 			}
-			if (peek() == '#' && peek_next() != '>') {
-				error("Missing closing > in block comment.");
-				advance(); // Consume '#'
+			if (peek() == '\n') {
+				had_error = true;
+				add_token(TokenType::Illegal, "Unterminated block comment.");
 				break;
 			}
 			if (peek() == '#' && peek_next() == '>') {
 				advance(); // consume '#'
 				advance(); // consume '>'
-				break;
+				break; 
 			}
 			advance();
 		}
@@ -241,13 +255,9 @@ namespace aera::lexer {
 
 	void Lexer::read_character() {
 		if (peek() == '\'') {
-			error("Empty character literal");
-			advance();
-			return;
-		}
-
-		if (is_at_end()) {
-			error("Unterminated character literal");
+			advance(); // Consume the '
+			had_error = true;
+			add_token(TokenType::Illegal, "Empty character literal.");
 			return;
 		}
 
@@ -263,25 +273,30 @@ namespace aera::lexer {
 			case '\'': ch = '\''; break;
 			case '"': ch = '"'; break;
 			default:
-				error("Invalid escape sequence : \\" + std::string(1, escaped));
+				had_error = true;
+				add_token(TokenType::Illegal, "Invalid escape sequence: \\" + std::string(1, escaped));
 				break;
 			}
 		}
 		else if (!(is_alpha(ch) || is_digit(ch) || is_symbol(ch) || is_space(ch))) {
 			if (ch == '\\') {
-				error("Unterminated escape sequence in character literal");
+				had_error = true;
+				add_token(TokenType::Illegal, "Unterminated escape sequence in character literal.");
 			}
 			else {
-				error("Invalid character in literal: " + std::string(1, ch));
+				had_error = true;
+				add_token(TokenType::Illegal, "Invalid character in literal: " + std::string(1, ch));
 			}
 		}
 
 		if (peek() != '\'') {
 			if (is_at_end()) {
-				error("Unterminated character literal");
+				had_error = true;
+				add_token(TokenType::Illegal, "Unterminated character literal.");
 			}
 			else {
-				error("Character literal is too long; must contain only one character");
+				had_error = true;
+				add_token(TokenType::Illegal, "Character literal must contain only one character.");
 				// Consume until the next quote to help parser recover
 				while (!is_at_end() && peek() != '\'') {
 					advance();
@@ -299,24 +314,15 @@ namespace aera::lexer {
 	}
 
 	void Lexer::read_string() {
-		bool had_error = false;
-		std::string buf; 
+		std::string buf; // Can also do from start to index - start
 
-		while (true) {
-
-			if (is_at_end()) {
-				error("Unterminated string."); 
-				return; 
-			}
-
+		while (peek() != '"' && !is_at_end()) {
 			char ch = advance();
 
-			if (ch == '"') {
-				break; // Found closing double quote
-			}
-			else if (ch == '\\') { // Start of escape sequence
+			if (ch == '\\') { // Start of escape sequence
 				if (is_at_end()) {
-					error("Unterminated string after escape character.");
+					had_error = true;
+					add_token(TokenType::Illegal, "Unterminated string literal.");
 					return;
 				}
 				char escaped = advance();
@@ -329,8 +335,14 @@ namespace aera::lexer {
 				case '"': buf += '"'; break;
 				default:
 					had_error = true;
-					error("Invalid escape sequence : \\" + std::string(1, escaped));
-					break;
+					add_token(TokenType::Illegal, "Invalid escape sequence: \\" + std::string(1, escaped));
+					while (peek() != '"' && !is_at_end()) {
+						advance();
+					}
+					if (!is_at_end()) {
+						advance(); // Consume closing "
+					}
+					return;
 				}
 			}
 			else {
@@ -338,44 +350,122 @@ namespace aera::lexer {
 			}
 		}
 
-		if (!had_error) {
-			add_token(TokenType::StringLiteral, buf);
+		if (is_at_end()) {
+			had_error = true;
+			add_token(TokenType::Illegal, "Unterminated string literal.");
+			return;
 		}
+
+		advance(); // Consume closing "
+		add_token(TokenType::StringLiteral, buf);
 	}
 	
+	void Lexer::read_for_loop_pattern() {
+
+	}
+
 	void Lexer::read_number() {
 		bool is_float = false;
+
+		// Handle integer numbers first
 
 		while (is_digit(peek())) {
 			advance();
 		}
 
-		if ((peek() == 'u' && is_digit(peek_next())) || (peek() == 'i' && is_digit(peek_next()))) { // Case sensitive
-			advance(); // consume the suffix char
+		if ((peek() == 'i' || peek() == 'u' || peek() == 'f') && is_digit(peek_next())) {
+			size_t suffix_start = index;
+			advance(); // Consume the suffix char
+
+			while (is_digit(peek())) {
+				advance();
+			}
+
+			std::string suffix = input.substr(suffix_start, index - suffix_start);
+
+			bool valid_int_suffix = (valid_int_suffixes.find(suffix) != valid_int_suffixes.end());
+			bool valid_float_suffix = (valid_float_suffixes.find(suffix) != valid_float_suffixes.end());
+
+			if (valid_float_suffix) {
+				is_float = true; // Upgrade to float (e.g., 3f32)
+			}
+			else if (!valid_int_suffix) { // Not valid float or int suffix
+				std::string malformed_literal = input.substr(start, index - start);
+				had_error = true;
+				add_token(TokenType::Illegal, "Invalid integer suffix: " + malformed_literal);
+				return;
+			}
+		}
+
+		// Check for range operator (integers only)
+
+		if (peek() == '.' && peek_next() == '.') {
+			if (is_float) { // e.g., 3f32.. is illegal
+				advance();
+				advance();
+				std::string error_text = input.substr(start, index - start);
+				had_error = true;
+				add_token(TokenType::Illegal, "Range operator cannot follow a float literal: " + error_text);
+				return;
+			}
+			else {
+				add_token(TokenType::IntLiteral, input.substr(start, index - start));
+				return; // Main loop consumes ..
+			}	
+		}
+
+		// Handle float numbers
+
+		if (peek() == '.' && !is_alpha(peek_next())) {
+			is_float = true;
+			advance(); // Consume the '.'
 
 			while (is_digit(peek())) {
 				advance();
 			}
 		}
-		else if (peek() == '.' && is_digit(peek_next())) {
-			is_float = true;
-			advance();
 
-			while (is_digit(peek())) {
-				advance();
-			}
-
-			// Check for float suffix
-
-			if (peek() == 'f' && is_digit(peek_next())) { // Case sensitive
-				advance(); // consume the suffix char
+		if (is_float) {
+			if ((peek() == 'i' || peek() == 'u' || peek() == 'f') && is_digit(peek_next())) {
+				size_t suffix_start = index;
+				advance(); // Consume the suffix char
 
 				while (is_digit(peek())) {
 					advance();
 				}
+
+				std::string suffix = input.substr(suffix_start, index - suffix_start);
+
+				if (valid_float_suffixes.find(suffix) == valid_float_suffixes.end()) {
+						std::string malformed_literal = input.substr(start, index - start);
+						add_token(TokenType::Illegal, "Invalid suffix for float literal: " + malformed_literal);
+						had_error = true;
+						return;
+				}
+			}
+		}
+		
+		// Check for malformed numbers
+	
+		if (peek() == '.') {
+			if (peek_next() == '.' && is_float) {
+				advance();
+				advance();
+				std::string error_text = input.substr(start, index - start);
+				had_error = true;
+				add_token(TokenType::Illegal, "Range operator cannot follow a float literal: " + error_text);
+				return;
+			}
+			else {
+				advance();
+				std::string error_text = input.substr(start, index - start);
+				add_token(TokenType::Illegal, "Malformed number literal: " + error_text);
+				had_error = true;
+				return;
 			}
 		}
 
+		// Otherwise add as float / int literal
 		std::string num_as_str = input.substr(start, index - start);
 
 		if (is_float) {
@@ -384,7 +474,6 @@ namespace aera::lexer {
 		else {
 			add_token(TokenType::IntLiteral, num_as_str);
 		}
-
 	}
 
 	void Lexer::read_identifier() {
@@ -431,7 +520,6 @@ namespace aera::lexer {
 
 	void Lexer::error(const std::string& message) {
 		std::cerr << "[" << line << ":" << col << "] Error: " << message << std::endl;
-		had_error = true;
 	}
 
 }
