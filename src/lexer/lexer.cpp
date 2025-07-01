@@ -51,90 +51,15 @@ namespace aera::lexer {
 
 			// Punctuation
 
-			case '(': add_token(TokenType::LeftParen); break;
-			case ')': add_token(TokenType::RightParen); break;
-			case '{': add_token(TokenType::LeftBrace); break;
-			case '}': add_token(TokenType::RightBrace); break;
-			case '[': add_token(TokenType::LeftBracket); break;
-			case ']': add_token(TokenType::RightBracket); break;
-			case ',': add_token(TokenType::Comma); break;
-			case '.':
-				if (match('.')) {
-					if (match('=')) {
-						add_token(TokenType::RangeInclusiveOp); // ..=
-					}
-					else {
-						add_token(TokenType::RangeExclusiveOp); // ..
-					}
-				}
-				else {
-					add_token(TokenType::Period);
-				}
-				break;
-			case ';': add_token(TokenType::Semicolon); break;
-			case ':': add_token(TokenType::Colon); break;
+			case '(': case ')': case '{': case '}':
+			case ',': case ';': case ':': read_punctuation(ch); break;
 
-			// Potential operators
+			// Operators
 
-			case '?': add_token(TokenType::Question); break;
-			case '@': add_token(TokenType::At); break;
-
-			// Arithmetic operators
-
-			case '+': add_token(TokenType::PlusOp); break;
-
-			// Special case -> the minus operator could lead to the arrow (or return type) operator
-			case '-': 
-				add_token((match('>') ? TokenType::ArrowOp : TokenType::MinusOp));
-				break;
-
-			case '*': add_token(TokenType::StarOp); break;
-			case '/': add_token(TokenType::SlashOp); break;
-			case '%': add_token(TokenType::PercentOp); break;
-
-			// Comparison operators
-
-			case '!':
-				add_token((match('=') ? TokenType::ExclaimEqualOp : TokenType::ExclaimOp));
-				break;
-
-			case '=':
-				add_token((match('=') ? TokenType::EqualOp : TokenType::AssignOp));
-				break;
-
-			case '>':
-				add_token((match('=') ? TokenType::GreaterEqualOp : TokenType::GreaterOp));
-				break;
-
-			// Special case -> check for block comment starting with <#
-			case '<':
-				if (match('#')) {
-					read_block_comment();
-				}
-				else { // Otherwise, add as usual
-					add_token((match('=') ? TokenType::LessEqualOp : TokenType::LessOp));
-				}
-				break;
-
-			// Bitwise / Logical operators
-
-			case '&':
-				if (match('&')) {
-					add_token(TokenType::LogicalAndOp);  // &&
-				}
-				else {
-					add_token(TokenType::BitwiseAndOp);   // &
-				}
-				break;
-
-			case '|':
-				if (match('|')) {
-					add_token(TokenType::LogicalOrOp);   // ||
-				}
-				else {
-					add_token(TokenType::BitwiseOrOp);        // |
-				}
-				break;
+			case '+': case '-': case '*': case '/':
+			case '=': case '!': case '<': case '>':
+			case '&': case '|': case '%': case '^':
+			case '.': case '?': case '@': read_operator(ch); break;
 
 			// Line comments
 
@@ -152,17 +77,17 @@ namespace aera::lexer {
 
 			// Character literal
 
-			case '\'': read_character(); break; // characters always start with '
+			case '\'': read_character(); break;
 
 			// String literal
 
-			case '"': read_string(); break; // strings always start with "
+			case '"': read_string(); break;
 
-			// Integer, float and identifiers are handlded in the default case
+			// Number literals (int, float) and identifiers
 
 			default:
 				if (is_digit(ch)) {
-					read_number(); // handles integer and floating point literals
+					read_number(); 
 				}
 				else if (is_alpha(ch)) {
 					read_identifier();
@@ -170,7 +95,7 @@ namespace aera::lexer {
 				else {
 					had_error = true;
 					std::string bad_char(1, ch);
-					add_token(TokenType::Illegal, bad_char); // unexpected character
+					add_token(TokenType::Illegal, bad_char); // Unexpected character, not valid in language
 				}
 				break;
 		}
@@ -226,6 +151,131 @@ namespace aera::lexer {
 		return true;
 	}
 
+	void Lexer::read_punctuation(char c) {
+		switch (c) {
+			case '(': add_token(TokenType::LeftParen); break;
+			case ')': add_token(TokenType::RightParen); break;
+			case '{': add_token(TokenType::LeftBrace); break;
+			case '}': add_token(TokenType::RightBrace); break;
+			case '[': add_token(TokenType::LeftBracket); break;
+			case ']': add_token(TokenType::RightBracket); break;
+			case ',': add_token(TokenType::Comma); break;
+			case ';': add_token(TokenType::Semicolon); break;
+			case ':': add_token(TokenType::Colon); break;
+		}
+	}
+
+	void Lexer::read_operator(char c) {
+		switch (c) {
+			// Longest tokens (length <= 3)
+
+			case '.':
+				if (match('.')) { // Handles ..= and .. tokens
+					add_token((match('=') ? TokenType::PeriodPeriodEqual : TokenType::PeriodPeriod));
+				}
+				else { // Handles . token
+					add_token(TokenType::Period);
+				}
+				break;
+
+			case '<':
+				if (match('<')) { // Handle <<= and << tokens
+					add_token((match('=') ? TokenType::LessLessEqual : TokenType::LessLess));
+				}
+				else if (match('#')) { // Block comments start with <#
+					read_block_comment();
+				}
+				else { // Handle < and <= tokens
+					add_token((match('=') ? TokenType::LessEqual : TokenType::Less));
+				}
+				break;
+
+			case '>':
+				if (match('>')) { // Handle >>= and >> tokens
+					add_token((match('>') ? TokenType::GreaterGreaterEqual : TokenType::GreaterGreater));
+				}
+				else { // Handle > and >= tokens
+					add_token((match('=') ? TokenType::GreaterEqual : TokenType::Greater));
+				}
+				break;
+
+			// Multi-tokens (len <= 2)
+
+			case '+':
+				if (match('+')) {
+					add_token(TokenType::PlusPlus);
+				}
+				else {
+					add_token((match('=') ? TokenType::PlusEqual : TokenType::Plus));
+				}
+				break;
+				
+			case '-':
+				if (match('>')) {
+					add_token(TokenType::MinusGreater);
+				}
+				else if (match('-')) {
+					add_token(TokenType::MinusMinus);
+				}
+				else {
+					add_token((match('=') ? TokenType::MinusEqual : TokenType::Minus));
+				}
+				break;
+
+			case '*':
+				add_token((match('=') ? TokenType::StarEqual : TokenType::Star));
+				break;
+
+			case '/':
+				add_token((match('=') ? TokenType::SlashEqual : TokenType::Slash));
+				break;
+
+			case '%':
+				add_token((match('=') ? TokenType::PercentEqual : TokenType::Percent));
+				break;
+
+			case '!':
+				add_token((match('=') ? TokenType::ExclaimEqual : TokenType::Exclaim));
+				break;
+
+			case '=':
+				add_token((match('=') ? TokenType::EqualEqual : TokenType::Equal));
+				break;
+			
+			case '&':
+				if (match('&')) { // Handles logical and (&&) token
+					add_token(TokenType::AmpAmp);  
+				}
+				else { // Handles bitwise and tokens
+					add_token((match('=') ? TokenType::AmpEqual : TokenType::Amp));
+				}
+				break;
+
+			case '|': 
+				if (match('|')) { // Handles logical or (||) token
+					add_token(TokenType::PipePipe);
+				}
+				else { // Handles bitwise or tokens
+					add_token((match('=') ? TokenType::PipeEqual : TokenType::Pipe));
+				}
+				break;
+
+			case '^':
+				add_token((match('=') ? TokenType::CaretEqual : TokenType::Caret));
+				break;
+
+			case '~':
+				add_token((match('=') ? TokenType::TildeEqual : TokenType::Tilde));
+				break;
+			
+			// Simple operators (len == 1)
+
+			case '?': add_token(TokenType::Question); break;
+			case '@': add_token(TokenType::At); break;
+		}
+
+	}
+
 	void Lexer::read_line_comment() {
 		while (peek() != '\n' && !is_at_end()) {
 			advance();
@@ -266,16 +316,16 @@ namespace aera::lexer {
 		if (ch == '\\' && !is_at_end()) { // Handle escape sequences
 			char escaped = advance();
 			switch (escaped) {
-			case 'n': ch = '\n'; break;
-			case 't': ch = '\t'; break;
-			case 'r': ch = '\r'; break;
-			case '\\': ch = '\\'; break;
-			case '\'': ch = '\''; break;
-			case '"': ch = '"'; break;
-			default:
-				had_error = true;
-				add_token(TokenType::Illegal, "Invalid escape sequence: \\" + std::string(1, escaped));
-				break;
+				case 'n': ch = '\n'; break;
+				case 't': ch = '\t'; break;
+				case 'r': ch = '\r'; break;
+				case '\\': ch = '\\'; break;
+				case '\'': ch = '\''; break;
+				case '"': ch = '"'; break;
+				default:
+					had_error = true;
+					add_token(TokenType::Illegal, "Invalid escape sequence: \\" + std::string(1, escaped));
+					break;
 			}
 		}
 		else if (!(is_alpha(ch) || is_digit(ch) || is_symbol(ch) || is_space(ch))) {
@@ -327,22 +377,22 @@ namespace aera::lexer {
 				}
 				char escaped = advance();
 				switch (escaped) {
-				case 'n': buf += '\n'; break;
-				case 't': buf += '\t'; break;
-				case 'r': buf += '\r'; break;
-				case '\\': buf += '\\'; break;
-				case '\'': buf += '\''; break;
-				case '"': buf += '"'; break;
-				default:
-					had_error = true;
-					add_token(TokenType::Illegal, "Invalid escape sequence: \\" + std::string(1, escaped));
-					while (peek() != '"' && !is_at_end()) {
-						advance();
-					}
-					if (!is_at_end()) {
-						advance(); // Consume closing "
-					}
-					return;
+					case 'n': buf += '\n'; break;
+					case 't': buf += '\t'; break;
+					case 'r': buf += '\r'; break;
+					case '\\': buf += '\\'; break;
+					case '\'': buf += '\''; break;
+					case '"': buf += '"'; break;
+					default:
+						had_error = true;
+						add_token(TokenType::Illegal, "Invalid escape sequence: \\" + std::string(1, escaped));
+						while (peek() != '"' && !is_at_end()) {
+							advance();
+						}
+						if (!is_at_end()) {
+							advance(); // Consume closing "
+						}
+						return;
 				}
 			}
 			else {
@@ -358,10 +408,6 @@ namespace aera::lexer {
 
 		advance(); // Consume closing "
 		add_token(TokenType::StringLiteral, buf);
-	}
-	
-	void Lexer::read_for_loop_pattern() {
-
 	}
 
 	void Lexer::read_number() {

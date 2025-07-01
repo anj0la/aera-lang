@@ -10,47 +10,66 @@ namespace aera::lexer {
 
         // Punctuation
 
-		LeftParen, RightParen,		 // ()
-		LeftBrace, RightBrace,		 // {}
-		LeftBracket, RightBracket,	 // []
-		Comma, Period,	             // , .
-		Semicolon, Colon,            // ; :
+		LeftParen,                  // (
+        RightParen,	                // )
+		LeftBrace,                  // {
+        RightBrace,                 // }
+		LeftBracket,                // [ 
+        RightBracket,               // ]
+		Comma,                      // ,
+        Period,                     // .
+		Semicolon,                  // ;
+        Colon,                      // ;
 		
-        // Potential operators
+        // Operators (from longest to shortest)
 
-        Question,                    // ? (used for potential nullable types)
-        At,                          // @ (potential uses: macros)
+        LessLessEqual,              // <<=
+        GreaterGreaterEqual,        // >>=
+        PeriodPeriodEqual,          // ..=
 
-        // Arithmetic operators
+        AmpAmp,                     // &&
+        PipePipe,                   // ||
+        EqualEqual,		            // ==
+        ExclaimEqual,	            // !=
+        GreaterEqual,               // >=
+        LessEqual,		            // <=
+        GreaterGreater,             // >>
+        LessLess,                   // <<
+        PlusPlus,                   // ++
+        MinusMinus,                 // --
+        PlusEqual,                  // +=
+        MinusEqual,                 // -=
+        StarEqual,                  // *=
+        SlashEqual,                 // /=
+        PercentEqual,               // %=
+        AmpEqual,                   // &=
+        PipeEqual,                  // |=
+        CaretEqual,                 // ^=
+        TildeEqual,                 // ~=
+        MinusGreater,               // ->
+        PeriodPeriod,               // ..
+        EqualGreater,               // =>
 
-        PlusOp, MinusOp, StarOp, SlashOp, PercentOp, // + - * / %
-
-        // Comparison operators
-
-        ExclaimOp, ExclaimEqualOp,	 // !, !=
-        AssignOp, EqualOp,		     // =, ==
-        GreaterOp, GreaterEqualOp,	 // >, >=
-        LessOp, LessEqualOp,		 // <, <=
-
-        // Logical operators
-
-        LogicalAndOp,                // &&
-        LogicalOrOp,                 // ||
-
-        // Bitwise operators (added because easy to parse)
-
-        BitwiseAndOp,                // &
-        BitwiseOrOp,                 // |
-
-        // Other operators
-
-        ArrowOp,                     // Used in functions to declare return type
-        RangeInclusiveOp,            // 0..=10, including 10 -> used in for loops
-        RangeExclusiveOp,            // 0..10, not including 10 -> used in for loops
+        Amp,                        // &
+        Pipe,                       // |
+        Caret,                      // ^
+        Tilde,                      // ~
+        Plus,                       // +
+        Minus,                      // -
+        Star,                       // *
+        Slash,                      // /
+        Percent,                    // %
+        Question,                   // ?
+        At,                         // @
+        Exclaim,                    // !
+        Equal,                      // =
+        Greater,                    // >
+        Less,                       // <
+        
         // Comments
 
-        LineComment,                 // #
-        BlockComment,                // <# ... #>
+        LineComment,                // #
+        BlockComment,               // <# ... #>
 
 		// Literals
 
@@ -61,7 +80,7 @@ namespace aera::lexer {
 		Fn, Let, Mut, Const, Pub,
 		If, Else, For, While, Loop, Match, Break, Continue, Return,
 		Import, Class, Struct, Enum, Interface, Alias, Self, As,
-		In, True, False, Null, None, Cpp,
+		In, True, False, None, Bind,
 
 		Illegal, Eof
 	};
@@ -92,9 +111,8 @@ namespace aera::lexer {
         {"in", TokenType::In},
         {"true", TokenType::BoolLiteral},
         {"false", TokenType::BoolLiteral},
-        {"null", TokenType::Null},
         {"none", TokenType::None},
-        {"cpp", TokenType::Cpp}
+        {"cpp", TokenType::Bind}
     };
 
     inline const std::unordered_set<std::string> valid_int_suffixes = {

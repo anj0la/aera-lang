@@ -36,11 +36,12 @@ namespace aera::lexer {
 		void add_token(TokenType type, const std::string& lexeme);
 		void add_token(TokenType type);
 		bool match(char expected);
+		void read_punctuation(char c);
+		void read_operator(char c);
 		void read_line_comment();
 		void read_block_comment();
 		void read_character();
 		void read_string();
-		void read_for_loop_pattern();
 		void read_number();
 		void read_identifier();
 		

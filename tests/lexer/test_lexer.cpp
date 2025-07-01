@@ -13,7 +13,7 @@ TEST(LexerTest, TokenizesLetStatement) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,		"let", 1, 1},
 		{TokenType::Identifier, "x",   1, 5},
-		{TokenType::AssignOp,	"=",   1, 7},
+		{TokenType::Equal,	    "=",   1, 7},
 		{TokenType::IntLiteral, "5",   1, 9},
 		{TokenType::Semicolon,	";",   1, 10},
 		{TokenType::Eof,		"",    1, 11}
@@ -66,7 +66,7 @@ TEST(LexerTest, TokenizesWhileStatement) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::While,         "while",        1, 1},
 		{TokenType::Identifier,    "x",            1, 7},
-		{TokenType::GreaterOp,     ">",            1, 9},
+		{TokenType::Greater,       ">",            1, 9},
 		{TokenType::IntLiteral,    "10",           1, 11},
 		{TokenType::LeftBrace,     "{",            1, 14},
 		{TokenType::Identifier,    "do_something", 1, 16},
@@ -98,7 +98,7 @@ TEST(LexerTest, TokenizesForStatement_Exclusive) {
 		{TokenType::Identifier,			"i",            1, 5},
 		{TokenType::In,					"in",           1, 7},
 		{TokenType::IntLiteral,			"0",            1, 10},
-		{TokenType::RangeExclusiveOp,	"..",           1, 11},
+		{TokenType::PeriodPeriod,		"..",           1, 11},
 		{TokenType::IntLiteral,			"10",           1, 13},
 		{TokenType::LeftBrace,			"{",            1, 16},
 		{TokenType::Identifier,			"do_something", 1, 18},
@@ -130,7 +130,7 @@ TEST(LexerTest, TokenizesForStatement_Exclusive_WithIntTypes) {
 		{TokenType::Identifier,			"i",            1, 5},
 		{TokenType::In,					"in",           1, 7},
 		{TokenType::IntLiteral,			"0i32",         1, 10},
-		{TokenType::RangeExclusiveOp,	"..",           1, 14},
+		{TokenType::PeriodPeriod,		"..",           1, 14},
 		{TokenType::IntLiteral,			"10i32",        1, 16},
 		{TokenType::LeftBrace,			"{",            1, 22},
 		{TokenType::Identifier,			"do_something", 1, 24},
@@ -162,7 +162,7 @@ TEST(LexerTest, TokenizesForStatement_Inclusive) {
 		{TokenType::Identifier,			"i",            1, 5},
 		{TokenType::In,					"in",           1, 7},
 		{TokenType::IntLiteral,			"0",            1, 10},
-		{TokenType::RangeInclusiveOp,	"..=",          1, 11},
+		{TokenType::PeriodPeriodEqual,	"..=",          1, 11},
 		{TokenType::IntLiteral,			"10",           1, 14},
 		{TokenType::LeftBrace,			"{",            1, 17},
 		{TokenType::Identifier,			"do_something", 1, 19},
@@ -217,28 +217,28 @@ TEST(LexerTest, TokenizesFunctionDeclaration) {
 	Lexer lexer(input);
 
 	std::vector<Token> expected_tokens = {
-		{TokenType::Pub,         "pub",        1, 1},
-		{TokenType::Fn,          "fn",         1, 5},
-		{TokenType::Identifier,  "public_add", 1, 8},
-		{TokenType::LeftParen,   "(",          1, 18},
-		{TokenType::Identifier,  "a",          1, 19},
-		{TokenType::Colon,       ":",          1, 20},
-		{TokenType::Identifier,  "int32",      1, 22},
-		{TokenType::Comma,       ",",          1, 27},
-		{TokenType::Identifier,  "b",          1, 29},
-		{TokenType::Colon,       ":",          1, 30},
-		{TokenType::Identifier,  "int32",      1, 32},
-		{TokenType::RightParen,  ")",          1, 37},
-		{TokenType::ArrowOp,     "->",         1, 39},
-		{TokenType::Identifier,  "int32",      1, 42},
-		{TokenType::LeftBrace,   "{",          1, 48},
-		{TokenType::Return,      "return",     1, 50},
-		{TokenType::Identifier,  "a",          1, 57},
-		{TokenType::PlusOp,      "+",          1, 59},
-		{TokenType::Identifier,  "b",          1, 61},
-		{TokenType::Semicolon,   ";",          1, 62},
-		{TokenType::RightBrace,  "}",          1, 64},
-		{TokenType::Eof,         "",           1, 65}
+		{TokenType::Pub,			"pub",        1, 1},
+		{TokenType::Fn,				"fn",         1, 5},
+		{TokenType::Identifier,		"public_add", 1, 8},
+		{TokenType::LeftParen,		"(",          1, 18},
+		{TokenType::Identifier,		"a",          1, 19},
+		{TokenType::Colon,			":",          1, 20},
+		{TokenType::Identifier,		"int32",      1, 22},
+		{TokenType::Comma,			",",          1, 27},
+		{TokenType::Identifier,		"b",          1, 29},
+		{TokenType::Colon,			":",          1, 30},
+		{TokenType::Identifier,		"int32",      1, 32},
+		{TokenType::RightParen,		")",          1, 37},
+		{TokenType::MinusGreater,	"->",         1, 39},
+		{TokenType::Identifier,		"int32",      1, 42},
+		{TokenType::LeftBrace,		"{",          1, 48},
+		{TokenType::Return,			"return",     1, 50},
+		{TokenType::Identifier,		"a",          1, 57},
+		{TokenType::Plus,			"+",          1, 59},
+		{TokenType::Identifier,		"b",          1, 61},
+		{TokenType::Semicolon,		";",          1, 62},
+		{TokenType::RightBrace,		"}",          1, 64},
+		{TokenType::Eof,			"",           1, 65}
 	};
 
 	// Act
@@ -263,7 +263,7 @@ TEST(LexerTest, TokenizesMultiSentence) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,         "let",     1, 1},
 		{TokenType::Identifier,  "val",     1, 5},
-		{TokenType::AssignOp,    "=",       1, 9},
+		{TokenType::Equal,		 "=",       1, 9},
 		{TokenType::IntLiteral,  "10",      1, 11},
 		{TokenType::Semicolon,   ";",       1, 13},
 		{TokenType::Identifier,  "fn_call", 3, 3},
@@ -327,7 +327,7 @@ TEST(LexerTest, TokenizesStringWithNewlineEscape) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,            "let",           1, 1},
 		{TokenType::Identifier,     "s",             1, 5},
-		{TokenType::AssignOp,       "=",             1, 7},
+		{TokenType::Equal,			"=",             1, 7},
 		{TokenType::StringLiteral,  "hello\nworld",  1, 9},
 		{TokenType::Semicolon,      ";",             1, 23},
 		{TokenType::Eof,            "",              1, 24}
@@ -350,7 +350,7 @@ TEST(LexerTest, TokenizesEmptyString) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,            "let",     1, 1},
 		{TokenType::Identifier,     "empty",   1, 5},
-		{TokenType::AssignOp,       "=",       1, 11},
+		{TokenType::Equal,			"=",       1, 11},
 		{TokenType::StringLiteral,  "",        1, 13},
 		{TokenType::Semicolon,      ";",       1, 15},
 		{TokenType::Eof,            "",        1, 16}
@@ -371,12 +371,12 @@ TEST(LexerTest, HandlesEscapedQuotesAndBackslashes) {
 	std::string input = "let s = \"a \\\"quoted\\\" string and a \\\\ backslash\";";
 	Lexer lexer(input);
 	std::vector<Token> expected_tokens = {
-		{TokenType::Let,            "let",                        1, 1},
-		{TokenType::Identifier,     "s",                          1, 5},
-		{TokenType::AssignOp,       "=",                          1, 7},
-		{TokenType::StringLiteral,  "a \"quoted\" string and a \\ backslash", 1, 9},
-		{TokenType::Semicolon,      ";",                          1, 49},
-		{TokenType::Eof,            "",                           1, 50}
+		{TokenType::Let,            "let",										1, 1},
+		{TokenType::Identifier,     "s",										1, 5},
+		{TokenType::Equal,			"=",										1, 7},
+		{TokenType::StringLiteral,  "a \"quoted\" string and a \\ backslash",	1, 9},
+		{TokenType::Semicolon,      ";",										1, 49},
+		{TokenType::Eof,            "",											1, 50}
 	};
 
 	// Act
@@ -394,11 +394,11 @@ TEST(LexerTest, HandlesUnterminatedString) {
 	std::string input = "let s = \"abc";
 	Lexer lexer(input);
 	std::vector<Token> expected_tokens = {
-		{TokenType::Let,        "let",                         1, 1},
-		{TokenType::Identifier, "s",                           1, 5},
-		{TokenType::AssignOp,   "=",                           1, 7},
-		{TokenType::Illegal,    "Unterminated string literal.", 1, 9},
-		{TokenType::Eof,        "",                            1, 13}
+		{TokenType::Let,        "let",								1, 1},
+		{TokenType::Identifier, "s",								1, 5},
+		{TokenType::Equal,	    "=",								1, 7},
+		{TokenType::Illegal,    "Unterminated string literal.",		1, 9},
+		{TokenType::Eof,        "",									1, 13}
 	};
 
 	// Act
@@ -441,7 +441,7 @@ TEST(LexerTest, TokenizesSimpleCharacter) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,             "let", 1, 1},
 		{TokenType::Identifier,      "c",   1, 5},
-		{TokenType::AssignOp,        "=",   1, 7},
+		{TokenType::Equal,           "=",   1, 7},
 		{TokenType::CharacterLiteral,"a",   1, 9},
 		{TokenType::Semicolon,       ";",   1, 12},
 		{TokenType::Eof,             "",    1, 13}
@@ -462,12 +462,12 @@ TEST(LexerTest, TokenizesEscapedCharacter) {
 	std::string input = "let newline = '\\n';";
 	Lexer lexer(input);
 	std::vector<Token> expected_tokens = {
-		{TokenType::Let,             "let",     1, 1},
-		{TokenType::Identifier,      "newline", 1, 5},
-		{TokenType::AssignOp,        "=",       1, 13},
-		{TokenType::CharacterLiteral,"\n",      1, 15},
-		{TokenType::Semicolon,       ";",       1, 19},
-		{TokenType::Eof,             "",        1, 20}
+		{TokenType::Let,				"let",     1, 1},
+		{TokenType::Identifier,			"newline", 1, 5},
+		{TokenType::Equal,				"=",       1, 13},
+		{TokenType::CharacterLiteral,	"\n",      1, 15},
+		{TokenType::Semicolon,			";",       1, 19},
+		{TokenType::Eof,				"",        1, 20}
 	};
 
 	// Act
@@ -487,7 +487,7 @@ TEST(LexerTest, HandlesEmptyCharacterLiteral) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,        "let",                       1, 1},
 		{TokenType::Identifier, "c",                         1, 5},
-		{TokenType::AssignOp,   "=",                         1, 7},
+		{TokenType::Equal,      "=",                         1, 7},
 		{TokenType::Illegal,    "Empty character literal.",  1, 9},
 		{TokenType::Semicolon,  ";",                         1, 11},
 		{TokenType::Eof,        "",                          1, 12}
@@ -512,7 +512,7 @@ TEST(LexerTest, HandlesTooLongCharacterLiteral) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,        "let",													1, 1},
 		{TokenType::Identifier, "c",													1, 5},
-		{TokenType::AssignOp,   "=",													1, 7},
+		{TokenType::Equal,      "=",													1, 7},
 		{TokenType::Illegal,    "Character literal must contain only one character.",	1, 9},
 		{TokenType::Semicolon,  ";",													1, 13},
 		{TokenType::Eof,        "",														1, 14}
@@ -538,7 +538,7 @@ TEST(LexerTest, TokenizesIntegerLiterals) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,         "let",    1, 1},
 		{TokenType::Identifier,  "answer", 1, 5},
-		{TokenType::AssignOp,    "=",      1, 12},
+		{TokenType::Equal,		 "=",      1, 12},
 		{TokenType::IntLiteral,  "42",     1, 14},
 		{TokenType::Semicolon,   ";",      1, 16},
 		{TokenType::Eof,         "",       1, 17}
@@ -561,7 +561,7 @@ TEST(LexerTest, TokenizesFloatLiterals) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,			"let",    1, 1},
 		{TokenType::Identifier,		"pi",     1, 5},
-		{TokenType::AssignOp,		"=",      1, 8},
+		{TokenType::Equal,			"=",      1, 8},
 		{TokenType::FloatLiteral,	"3.14",  1, 10},
 		{TokenType::Semicolon,		";",      1, 14},
 		{TokenType::Eof,			"",       1, 15}
@@ -584,17 +584,17 @@ TEST(LexerTest, TokenizesNumbersWithSuffixes) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,            "let",     1, 1},
 		{TokenType::Identifier,     "num1",    1, 5},
-		{TokenType::AssignOp,       "=",       1, 10},
+		{TokenType::Equal,	        "=",       1, 10},
 		{TokenType::IntLiteral,		"42i32",   1, 12},
 		{TokenType::Semicolon,      ";",       1, 17},
 		{TokenType::Let,            "let",     1, 19},
 		{TokenType::Identifier,     "num2",    1, 23},
-		{TokenType::AssignOp,       "=",       1, 28},
+		{TokenType::Equal,	        "=",       1, 28},
 		{TokenType::IntLiteral,		"5u32",    1, 30},
 		{TokenType::Semicolon,      ";",       1, 34},
 		{TokenType::Let,            "let",     1, 36},
 		{TokenType::Identifier,     "num3",    1, 40},
-		{TokenType::AssignOp,       "=",       1, 45},
+		{TokenType::Equal,	        "=",       1, 45},
 		{TokenType::FloatLiteral,   "3.14f32", 1, 47},
 		{TokenType::Semicolon,      ";",       1, 54},
 		{TokenType::Eof,            "",        1, 55}
@@ -617,7 +617,7 @@ TEST(LexerTest, TokenizesIntegerWithFloatSuffixAsFloat) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,           "let",   1, 1},
 		{TokenType::Identifier,    "x",     1, 5},
-		{TokenType::AssignOp,      "=",     1, 7},
+		{TokenType::Equal,	       "=",     1, 7},
 		{TokenType::FloatLiteral,  "3f32",  1, 9},
 		{TokenType::Semicolon,     ";",     1, 13},
 		{TokenType::Eof,           "",      1, 14}
@@ -640,7 +640,7 @@ TEST(LexerTest, TokenizesFloatWithTrailingDot) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,           "let",  1, 1},
 		{TokenType::Identifier,    "pi",   1, 5},
-		{TokenType::AssignOp,      "=",    1, 8},
+		{TokenType::Equal,	       "=",    1, 8},
 		{TokenType::FloatLiteral,  "3.",   1, 10},
 		{TokenType::Semicolon,     ";",    1, 12},
 		{TokenType::Eof,           "",     1, 13}
@@ -663,7 +663,7 @@ TEST(LexerTest, HandlesMalformedNumberWithExtraDot) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,        "let",                             1, 1},
 		{TokenType::Identifier, "val",                             1, 5},
-		{TokenType::AssignOp,   "=",                               1, 9},
+		{TokenType::Equal,		"=",                               1, 9},
 		{TokenType::Illegal,    "Malformed number literal: 3.14.", 1, 11},
 		{TokenType::Semicolon,  ";",                               1, 16},
 		{TokenType::Eof,        "",                                1, 17}
@@ -687,7 +687,7 @@ TEST(LexerTest, HandlesInvalidIntegerSuffix) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,         "let",                     1, 1},
 		{TokenType::Identifier,  "x",                       1, 5},
-		{TokenType::AssignOp,    "=",                       1, 7},
+		{TokenType::Equal,    "=",                       1, 7},
 		{TokenType::Illegal,     "Invalid integer suffix: 123i99", 1, 9},
 		{TokenType::Semicolon,   ";",                       1, 15},
 		{TokenType::Eof,         "",                        1, 16}
@@ -807,7 +807,7 @@ TEST(LexerTest, TokensAndComments_IgnoresComments) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,		"let", 1, 1},
 		{TokenType::Identifier, "x",   1, 5},
-		{TokenType::AssignOp,	"=",   1, 7},
+		{TokenType::Equal,		"=",   1, 7},
 		{TokenType::IntLiteral, "5",   1, 9},
 		{TokenType::Semicolon,	";",   1, 10},
 		{TokenType::Eof,		"",    1, 27}
@@ -831,7 +831,7 @@ TEST(LexerTest, HandlesUnterminatedBlockComment) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,        "let",                      1, 1},
 		{TokenType::Identifier, "x",                        1, 5},
-		{TokenType::AssignOp,   "=",                        1, 7},
+		{TokenType::Equal,		"=",                        1, 7},
 		{TokenType::IntLiteral, "5",                        1, 9},
 		{TokenType::Semicolon,  ";",                        1, 10},
 		{TokenType::Illegal,    "Unterminated block comment.", 1, 12},
@@ -881,7 +881,7 @@ TEST(LexerTest, DistinguishesKeywordsFromIdentifiers) {
 		{TokenType::LeftBrace,      "{",              1, 10},
 		{TokenType::Let,         "let",            1, 12},
 		{TokenType::Identifier,  "return_value",   1, 16},
-		{TokenType::AssignOp,    "=",              1, 29},
+		{TokenType::Equal,	     "=",              1, 29},
 		{TokenType::BoolLiteral,  "true",           1, 31},
 		{TokenType::Semicolon,   ";",              1, 35},
 		{TokenType::RightBrace,      "}",              1, 37},
@@ -907,7 +907,7 @@ TEST(LexerTest, HandlesInvalidCharacter) {
 	std::vector<Token> expected_tokens = {
 		{TokenType::Let,        "let", 1, 1},
 		{TokenType::Identifier, "x",   1, 5},
-		{TokenType::AssignOp,   "=",   1, 7},
+		{TokenType::Equal,      "=",   1, 7},
 		{TokenType::Illegal,    "$",   1, 9},
 		{TokenType::Semicolon,  ";",   1, 10},
 		{TokenType::Eof,        "",    1, 11}
@@ -938,7 +938,7 @@ TEST(LexerTest, TokenizesHelloWorldProgram) {
 		{TokenType::Identifier,    "main",            1, 4},
 		{TokenType::LeftParen,     "(",               1, 8},
 		{TokenType::RightParen,    ")",               1, 9},
-		{TokenType::ArrowOp,       "->",              1, 11},
+		{TokenType::MinusGreater,  "->",              1, 11},
 		{TokenType::Identifier,    "None",            1, 14},
 		{TokenType::LeftBrace,     "{",               1, 19},
 		{TokenType::Identifier,    "print",           2, 5},
@@ -970,7 +970,7 @@ TEST(LexerTest, TokenizesComplexFunctionAndLoop) {
 fn sum_up_to(num: int32) -> int32 {
     let mut sum: int32 = 0;
     for i in 0..num {
-        sum = sum + i;
+        sum += i;
     }
     return sum;
 }
@@ -979,27 +979,27 @@ fn sum_up_to(num: int32) -> int32 {
 
 	std::vector<Token> expected_tokens = {
 		// main function
-		{TokenType::Fn,            "fn",          1, 1},
-		{TokenType::Identifier,    "main",        1, 4},
-		{TokenType::LeftParen,     "(",           1, 8},
-		{TokenType::RightParen,    ")",           1, 9},
-		{TokenType::ArrowOp,       "->",          1, 11},
-		{TokenType::Identifier,    "None",        1, 14},
-		{TokenType::LeftBrace,     "{",           1, 19},
-		{TokenType::Let,           "let",         2, 5},
-		{TokenType::Identifier,    "ans",         2, 9},
-		{TokenType::AssignOp,      "=",           2, 13},
-		{TokenType::Identifier,    "sum_up_to",   2, 15},
-		{TokenType::LeftParen,     "(",           2, 24},
-		{TokenType::IntLiteral,    "5i32",        2, 25},
-		{TokenType::RightParen,    ")",           2, 29},
-		{TokenType::Semicolon,     ";",           2, 30},
-		{TokenType::Identifier,    "print",       3, 5},
-		{TokenType::LeftParen,     "(",           3, 10},
-		{TokenType::Identifier,    "ans",         3, 11},
-		{TokenType::RightParen,    ")",           3, 14},
-		{TokenType::Semicolon,     ";",           3, 15},
-		{TokenType::RightBrace,    "}",           4, 1},
+		{TokenType::Fn,               "fn",          1, 1},
+		{TokenType::Identifier,       "main",        1, 4},
+		{TokenType::LeftParen,        "(",           1, 8},
+		{TokenType::RightParen,       ")",           1, 9},
+		{TokenType::MinusGreater,     "->",          1, 11},
+		{TokenType::Identifier,       "None",        1, 14},
+		{TokenType::LeftBrace,        "{",           1, 19},
+		{TokenType::Let,              "let",         2, 5},
+		{TokenType::Identifier,       "ans",         2, 9},
+		{TokenType::Equal,            "=",           2, 13},
+		{TokenType::Identifier,       "sum_up_to",   2, 15},
+		{TokenType::LeftParen,        "(",           2, 24},
+		{TokenType::IntLiteral,       "5i32",        2, 25},
+		{TokenType::RightParen,       ")",           2, 29},
+		{TokenType::Semicolon,        ";",           2, 30},
+		{TokenType::Identifier,       "print",       3, 5},
+		{TokenType::LeftParen,        "(",           3, 10},
+		{TokenType::Identifier,		  "ans",         3, 11},
+		{TokenType::RightParen,		  ")",           3, 14},
+		{TokenType::Semicolon,        ";",           3, 15},
+		{TokenType::RightBrace,		  "}",           4, 1},
 
 		// sum_up_to function
 		{TokenType::Fn,               "fn",          6, 1},
@@ -1009,7 +1009,7 @@ fn sum_up_to(num: int32) -> int32 {
 		{TokenType::Colon,            ":",           6, 17},
 		{TokenType::Identifier,       "int32",       6, 19},
 		{TokenType::RightParen,       ")",           6, 24},
-		{TokenType::ArrowOp,          "->",          6, 26},
+		{TokenType::MinusGreater,     "->",          6, 26},
 		{TokenType::Identifier,       "int32",       6, 29},
 		{TokenType::LeftBrace,        "{",           6, 35},
 		{TokenType::Let,              "let",         7, 5},
@@ -1017,22 +1017,20 @@ fn sum_up_to(num: int32) -> int32 {
 		{TokenType::Identifier,       "sum",         7, 13},
 		{TokenType::Colon,            ":",           7, 16},
 		{TokenType::Identifier,       "int32",       7, 18},
-		{TokenType::AssignOp,         "=",           7, 24},
+		{TokenType::Equal,            "=",           7, 24},
 		{TokenType::IntLiteral,       "0",           7, 26},
 		{TokenType::Semicolon,        ";",           7, 27},
 		{TokenType::For,              "for",         8, 5},
 		{TokenType::Identifier,       "i",           8, 9},
 		{TokenType::In,               "in",          8, 11},
 		{TokenType::IntLiteral,       "0",           8, 14},
-		{TokenType::RangeExclusiveOp, "..",          8, 15},
+		{TokenType::PeriodPeriod,	  "..",          8, 15},
 		{TokenType::Identifier,       "num",         8, 17},
 		{TokenType::LeftBrace,        "{",           8, 21},
 		{TokenType::Identifier,       "sum",         9, 9},
-		{TokenType::AssignOp,         "=",           9, 13},
-		{TokenType::Identifier,       "sum",         9, 15},
-		{TokenType::PlusOp,           "+",           9, 19},
-		{TokenType::Identifier,       "i",           9, 21},
-		{TokenType::Semicolon,        ";",           9, 22},
+		{TokenType::PlusEqual,		  "+=",          9, 13},
+		{TokenType::Identifier,       "i",           9, 16},
+		{TokenType::Semicolon,        ";",           9, 17},
 		{TokenType::RightBrace,       "}",           10, 5},
 		{TokenType::Return,           "return",      11, 5},
 		{TokenType::Identifier,       "sum",         11, 12},
