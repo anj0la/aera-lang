@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aera/lexer/token.hpp>
+#include <aera/token/token.hpp>
 
 #include <string>
 #include <vector>

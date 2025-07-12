@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aera/lexer/token_type.hpp>
+#include <aera/token/token_type.hpp>
 #include <string>
 #include <cstdint>
 

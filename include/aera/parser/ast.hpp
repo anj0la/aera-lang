@@ -6,7 +6,7 @@
 #include <variant>
 #include <optional>
 
-#include <token.hpp>
+#include <aera/token/token.hpp>
 
 namespace aera::parser {
 
