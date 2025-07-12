@@ -24,7 +24,7 @@ interface_declaration = "interface" identifier "{" { function_declaration } "}" 
 expression = assignment ;
 
 assignment = conditional [ assignment_op assignment ] ;
-assignment_op = "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | "&=" | "|=" | "^=" | "~=" | ;
+assignment_op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | "&=" | "|=" | "^=" | "~=" | ;
 
 conditional = logical_or [ "if" expression "else" else conditional ] ;
 logical_or = logical_and { "||" logical_and } ;
@@ -45,7 +45,6 @@ primary = literal | identifier | "(" expression ")" | unsafe ;
 argument_list = expression { ","  expression } ;
 unsafe = "unsafe" "{" statement [expression]  "}" ";" ;
 
-
 statement = variable_declaration
             | const_declaration
             | expression_statement
@@ -56,13 +55,13 @@ statement = variable_declaration
             | loop_statement
             | block ;
 
-variable_declaration = "let" ["mut"] identifier [":" type] [ "=" expression ] ";" ;
-const_declaration = "const" identifier [":" type] [ "=" expression ] ";" ;
+variable_declaration = "let" ["mut"] identifier [":" type] "=" expression ";" ;
+const_declaration = "const" identifier [":" type] "=" expression ";" ;
 expression_statement = expression ";" ;
-return statement = "return" [expression] ";" ;
+return_statement = "return" [expression] ";" ;
 if_statement = "if" expression statement ["else" statement] ";" ;
 while_statement = "while" expression statement ";" ;
-for_statement = "for" identifier "in" integer_literal ".." integer_literal statement ";" ; 
+for_statement = "for" identifier "in" expr [".."] expr statement ";" ; 
 loop_statement = "loop" statement ";" ;
 block = "{" { statement } "}" ";" ;
 

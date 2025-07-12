@@ -3,8 +3,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <cstdint>
 
-namespace aera::lexer {
+namespace aera {
 
 	enum class TokenType {
 

@@ -1,11 +1,10 @@
 #pragma once
 
 #include <aera/lexer/token_type.hpp>
-#include <variant>
 #include <string>
 #include <cstdint>
 
-namespace aera::lexer {
+namespace aera {
 
     struct Token {
         TokenType type;
