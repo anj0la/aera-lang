@@ -5,28 +5,33 @@ declaration = function_declaration
             | const_declaration
             | struct_declaration 
             | class_declaration
-            | interface_declaration ;
+            | trait_declaration
+            | with_delaration ;
 
-function_declaration = ["pub"] "fn" identifier "(" [parameter_list] ")" [ "->", type], block ;
+function_declaration = [modifiers] "fn" identifier "(" [parameter_list] ")" ["->", type], block ;
 parameter_list = parameter { "," parameter } ;
 parameter = identifier ":" type ;
+modifiers = "pub" | "modifies" ;
 
+variable_declaration = "let" ["mut"] identifier [":" type] ["=" expression ";"] ;
+const_declaration = "const" identifier [":" type] "=" expression ";" ;
 
 struct_declaration = "struct" identifier "{" { field_declaration } "}" ;
 field_declaration = identifier ":" type [ "=" expression ] ";" ;
 
-class_declaration = "class" identifier [ ":" identifier ] "{" { class_body } "}" ;
+class_declaration = "class" identifier [":" identifier] "{" { class_body } "}" ;
 class_body = { class_member } ;
 class_member = field_declaration | function_declaration ;
 
-interface_declaration = "interface" identifier "{" { function_declaration } "}" ;
+trait_declaration = "trait" identifier "{" { function_declaration } "}" ;
+with_declaration = "with" identifier "for" identifier "{" { function_declaration } "}" ;
 
 expression = assignment ;
 
-assignment = conditional [ assignment_op assignment ] ;
-assignment_op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | "&=" | "|=" | "^=" | "~=" | ;
+assignment = expression assignment_op assignment | conditional ;
+assignment_op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | "&=" | "|=" | "^=" | "~=" ;
 
-conditional = logical_or [ "if" expression "else" else conditional ] ;
+conditional = logical_or ["if" expression "else" else conditional] ;
 logical_or = logical_and { "||" logical_and } ;
 logical_and = bitwise_or { "&&" bitwise_or } ;
 bitwise_or = bitwise_xor { "|" bitwise_xor } ;
@@ -55,13 +60,11 @@ statement = variable_declaration
             | loop_statement
             | block ;
 
-variable_declaration = "let" ["mut"] identifier [":" type] "=" expression ";" ;
-const_declaration = "const" identifier [":" type] "=" expression ";" ;
 expression_statement = expression ";" ;
 return_statement = "return" [expression] ";" ;
 if_statement = "if" expression statement ["else" statement] ";" ;
 while_statement = "while" expression statement ";" ;
-for_statement = "for" identifier "in" expr [".."] expr statement ";" ; 
+for_statement = "for" identifier "in" expr [".." expr] statement ";" ; 
 loop_statement = "loop" statement ";" ;
 block = "{" { statement } "}" ";" ;
 

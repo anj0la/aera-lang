@@ -1,6 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <cstdint>
 #include <variant>
@@ -10,9 +12,53 @@
 
 namespace aera::parser {
 
-	using IntValue = std::variant<int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t>;
-	using FloatValue = std::variant<float, double>;
-	using LiteralValue = std::variant<std::string, char, bool, IntValue, FloatValue>;
+	// Forward Declarations
+
+	struct ASTNode;
+	struct Program;
+	struct Decl;
+	struct FnDecl;
+	struct VarDecl;
+	struct ConstDecl;
+	struct StructDecl;
+	struct FieldDecl;
+	struct ClassDecl;
+	struct TraitDecl;
+	struct WithDecl;
+	struct Expr;
+	struct Assignment;
+	struct IdentifierLValue;
+	struct ArrayAccessLValue;
+	struct FieldAccessLValue;
+	struct Conditional;
+	struct Binary;
+	struct Unary;
+	struct ArrayAcces;
+	struct FnCall;
+	struct MemberAccess;
+	struct Grouping;
+	struct Literal;
+	struct Identifier;
+	struct Bind;
+	struct Stmt;
+	struct ExprStmt;
+	struct IfStmt;
+	struct WhileStmt;
+	struct ForStmt;
+	struct IteratorForStmt;
+	struct RangeForStmt;
+	struct LoopStmt;
+	struct BlockStmt;
+
+	// Types
+
+	using Value = std::variant<int8_t, int16_t, int32_t, int64_t, 
+		uint8_t, uint16_t, uint32_t, uint64_t, 
+		float, double, std::string, char, bool>;
+
+	using CppType = std::variant<int8_t, int16_t, int32_t, int64_t,
+		uint8_t, uint16_t, uint32_t, uint64_t,
+		float, double, std::string, char, bool>;
 
 	enum class Type {
 		// Integer
@@ -26,12 +72,37 @@ namespace aera::parser {
 		String, Character, Bool
 	};
 
-	// Base node
+	// Result
+
+	using Result = std::variant<>; // Will store the Type, and semantic analyzer, symbol table and cpp codegen structs
+
+	// Base node (Abstract)
 
 	struct ASTNode {
-		int line = 1;
-		int col = 1;
+		SourceLocation loc;
+		virtual ~ASTNode() = default;
 	};
+
+	struct SourceLocation {
+		size_t line = 1;
+		size_t col = 1;
+		std::optional<std::string> filename; // add support later
+	};
+
+	// Visitor (Declarations)
+
+	struct DeclVisitor {
+		virtual ~DeclVisitor() = default;
+
+		virtual Result visit_fn_decl(const FnDecl& decl) = 0;
+		virtual Result visit_var_decl(const VarDecl& decl) = 0;
+		virtual Result visit_const_decl(const ConstDecl& decl) = 0;
+		virtual Result visit_struct_decl(const StructDecl& decl) = 0;
+		virtual Result visit_class_decl(const ClassDecl& decl) = 0;
+		virtual Result visit_field_decl(const FieldDecl& decl) = 0;
+		virtual Result visit_trait_decl(const TraitDecl& decl) = 0;
+		virtual Result visit_with_decl(const WithDecl& decl) = 0;
+		};
 
 	// Declarations
 
@@ -40,35 +111,18 @@ namespace aera::parser {
 	};
 
 	struct Decl : ASTNode { // Abstract
-
-		template<typename T>
-		struct Visitor {
-			virtual ~Visitor() = default;
-			virtual T visit_fn_decl(const FnDecl& decl) = 0;
-			virtual T visit_var_decl(const VarDecl& decl) = 0;
-			virtual T visit_const_decl(const ConstDecl& decl) = 0;
-			virtual T visit_struct_decl(const ClassDecl& decl) = 0;
-			virtual T visit_field_decl(const FieldDecl& decl) = 0;
-			virtual T visit_class_decl(const ClassDecl& decl) = 0;
-			virtual T visit_interface_decl(const ClassDecl& decl) = 0;
-		};
-
-		template<typename T>
-		virtual T accept(Visitor<T>& visitor) const = 0;
-
+		virtual Result accept(DeclVisitor& visitor) const = 0;
 		virtual ~Decl() = default;
-	
 	};
 
 	struct FnDecl : Decl { // Private visibility by default
 		bool is_public = false;
 		Token name;
-		std::vector<Token> params;
+		std::vector<std::pair<Token, Type>> params;
 		std::optional<Type> return_type;
-		std::vector<Stmt> body;
+		std::vector<std::unique_ptr<Stmt>> body;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_fn_decl(*this);
 		}
 	};
@@ -77,11 +131,9 @@ namespace aera::parser {
 		bool is_mutable = false;
 		Token name;
 		std::optional<Type> decl_type; // optionally declared by user
-		Type infer_type;			   // inferred type
-		Expr initializer;
+		std::optional<std::unique_ptr<Expr>> initializer;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_var_decl(*this);
 		}
 	};
@@ -89,209 +141,180 @@ namespace aera::parser {
 	struct ConstDecl : Decl { // IMMUTABLE, cannot be changed
 		Token name;
 		std::optional<Type> decl_type; // optionally declared by user
-		Type infer_type;			   // inferred type
-		Expr initializer;
+		std::unique_ptr<Expr> initializer;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_const_decl(*this);
 		}
-
 	}; 
 
 	struct StructDecl : Decl {
 		Token name;
-		std::vector<FieldDecl> fdecls;
+		std::vector<std::unique_ptr<FieldDecl>> fdecls;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_struct_decl(*this);
 		}
 	};
 
-	struct FieldDecl : Decl{
+	struct FieldDecl : Decl {
 		Token name;
-		Type type;			   // inferred type
-		Expr initializer;
+		Type type;
+		std::unique_ptr<Expr> initializer;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_field_decl(*this);
 		}
-	}
+	};
 
 	struct ClassDecl : Decl {
 		Token name;
-		std::vector<FieldDecl> fdecls;
-		std::vector<FnDecl> fndecls;
+		std::vector<std::unique_ptr<FieldDecl>> fdecls;
+		std::vector<std::unique_ptr<FnDecl>> fndecls;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_class_decl(*this);
 		}
 	};
 
-	struct InterfaceDecl : Decl {
+	struct TraitDecl : Decl {
 		Token name;
+		std::vector<std::unique_ptr<FnDecl>> fndecls;
+
+		Result accept(DeclVisitor& visitor) const override {
+			return visitor.visit_trait_decl(*this);
+		}
+	};
+
+	struct WithDecl : Decl {
+		Token trait_name; // The trait
+		Token type_name;  // The user-defined type to apply the trait to
 		std::vector<FnDecl> fndecls;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
-			return visitor.visit_interface_decl(*this);
+		Result accept(DeclVisitor& visitor) const override {
+			return visitor.visit_with_decl(*this);
 		}
+	};
+
+	// Visitor (Expressions)
+
+	struct ExprVisitor {
+		virtual ~ExprVisitor() = default;
+
+		virtual Result visit_assignment_expr(const Assignment& expr) = 0;
+		virtual Result visit_conditional_expr(const Conditional& expr) = 0;
+		virtual Result visit_binary_expr(const Binary& expr) = 0;
+		virtual Result visit_unary_expr(const Unary& expr) = 0;
+		virtual Result visit_array_access_expr(const ArrayAccess& expr) = 0;
+		virtual Result visit_fn_call_expr(const FnCall& expr) = 0;
+		virtual Result visit_member_access_expr(const MemberAccess& expr) = 0;
+		virtual Result visit_grouping_expr(const Grouping& expr) = 0;
+		virtual Result visit_literal_expr(const Literal& expr) = 0;
+		virtual Result visit_identifier_expr(const Identifier& expr) = 0;
+		virtual Result visit_bind_expr(const Bind& expr) = 0;
+
 	};
 
 	// Expressions
 
-	struct Expr : ASTNode { // Abstract
-
-		template<typename T>
-		struct Visitor {
-			virtual ~Visitor() = default;
-			virtual T visit_assignment_expr(const Assignment& expr) = 0;
-			virtual T visit_identifier_lvalue_expr(const IdentifierLValue& expr) = 0;
-			virtual T visit_array_access_lvalue_expr(const ArrayAccessLValue& expr) = 0;
-			virtual T visit_field_access_lvalue_expr(const FieldAccessLValue& expr) = 0;
-			virtual T visit_conditional_expr(const Conditional& expr) = 0;
-			virtual T visit_binary_expr(const Binary& expr) = 0;
-			virtual T visit_unary_expr(const Unary& expr) = 0;
-			virtual T visit_array_access_expr(const ArrayAccess& expr) = 0;
-			virtual T visit_fn_call_expr(const FnCall& expr) = 0;
-			virtual T visit_member_access_expr(const MemberAccess& expr) = 0;
-			virtual T visit_grouping_expr(const Grouping& expr) = 0;
-			virtual T visit_literal_expr(const Literal& expr) = 0;
-			virtual T visit_identifier_expr(const Identifier& expr) = 0;
-			virtual T visit_unsafe_expr(const Unsafe& expr) = 0;
-		};
-
-		template<typename T>
-		virtual T accept(Visitor<T>& visitor) const = 0;
-
+	struct Expr : ASTNode {
+		virtual bool is_lvalue() const { 
+			return false; 
+		}
 		virtual ~Expr() = default;
-
+		virtual Result accept(ExprVisitor& visitor) const = 0;
 	}; 
 
 	struct Assignment : Expr {
-		LValue lvalue;
+		std::unique_ptr<Expr> expr;
 		Token op;
-		Expr rhs;
+		std::unique_ptr<Expr> rhs;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_assignment_expr(*this);
 		}
 	};
 
-	struct LValue : Expr {};
-
-	struct IdentifierLValue : LValue {
-		Token name;
-
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
-			return visitor.visit_identifier_lvalue_expr(*this);
-		}
-	};
-
-	struct ArrayAccessLValue : LValue {
-		LValue lvalue;
-		int64_t index;
-
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
-			return visitor.visit_array_access_lvalue_expr(*this);
-		}
-	};
-
-	struct FieldAccessLValue : LValue {
-		LValue lvalue;
-		Token name;
-
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
-			return visitor.visit_field_access_lvalue_expr(*this);
-		}
-	};
-
 	struct Conditional : Expr {
-		Expr conditional;
-		Expr true_expr;
-		Expr false_expr;
+		std::unique_ptr< Expr> conditional;
+		std::unique_ptr< Expr> true_expr;
+		std::unique_ptr< Expr> false_expr;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_conditional_expr(*this);
 		}
 	};
 
 	struct Binary : Expr {
-		Expr lhs;
+		std::unique_ptr< Expr> lhs;
 		Token op;
-		Expr rhs;
+		std::unique_ptr< Expr> rhs;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_binary_expr(*this);
 		}
 	};
 
 	struct Unary : Expr {
 		Token op;
-		Expr rhs;
+		std::unique_ptr< Expr> rhs;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_unary_expr(*this);
 		}
 	};
 
 	struct ArrayAccess : Expr {
-		Expr expr;
+		std::unique_ptr< Expr> expr;
 		int64_t index;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_array_access_expr(*this);
+		}
+
+		bool is_lvalue() const override { 
+			return true; 
 		}
 	};
 
 	struct FnCall : Expr {
-		Expr callee;
+		std::unique_ptr< Expr> callee;
 		Token paren;
-		std::vector<Expr> arguments;
+		std::vector<std::unique_ptr< Expr>> args;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_fn_call_expr(*this);
 		}
 	};
 
 	struct MemberAccess : Expr {
-		Expr obj;
+		std::unique_ptr< Expr> obj;
 		Token name;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_member_access_expr(*this);
 		}
+
+		bool is_lvalue() const override { 
+			return true; 
+		}
+
 	};
 
 	struct Grouping : Expr {
-		Expr expr;
+		std::unique_ptr< Expr> expr;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_grouping_expr(*this);
 		}
 	};
 
 	struct Literal : Expr {
-		LiteralValue value;
+		Value value;
 		Type type;
-		std::string raw_text;
+		std::string raw_text; // would return typeinfo
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_literal_expr(*this);
 		}
 	};
@@ -299,124 +322,115 @@ namespace aera::parser {
 	struct Identifier : Expr {
 		Token name;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_identifier_expr(*this);
+		}
+
+		bool is_lvalue() const override { 
+			return true; 
 		}
 	};
 
-	struct Unsafe : Expr {
-		Stmt stmt;
-		std::optional<Expr> expr;
+	struct Bind : Expr {
+		std::unique_ptr<Stmt> stmt;
+		std::optional<std::unique_ptr< Expr>> expr;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
-			return visitor.visit_unsafe_expr(*this);
+		Result accept(ExprVisitor& visitor) const override {
+			return visitor.visit_bind_expr(*this);
 		}
+	};
+
+	// Visitor (Statements)
+	
+	struct StmtVisitor {
+		virtual ~StmtVisitor() = default;
+		virtual Result visit_expr_stmt(const ExprStmt& stmt) = 0;
+		virtual Result visit_return_stmt(const ReturnStmt& stmt) = 0;
+		virtual Result visit_if_stmt(const IfStmt& stmt) = 0;
+		virtual Result visit_while_stmt(const WhileStmt& stmt) = 0;
+		virtual Result visit_iterator_for_stmt(const IteratorForStmt& stmt) = 0;
+		virtual Result visit_range_for_stmt(const RangeForStmt& stmt) = 0;
+		virtual Result visit_loop_stmt(const LoopStmt& stmt) = 0;
+		virtual Result visit_block_stmt(const BlockStmt& stmt) = 0;
 	};
 
 	// Statements
 
 	struct Stmt : ASTNode { // Abstract
-
-		template<typename T>
-		struct Visitor {
-			virtual ~Visitor() = default;
-			virtual T visit_expr_stmt(const ExprStmt& stmt) = 0;
-			virtual T visit_return_stmt(const ReturnStmt& stmt) = 0;
-			virtual T visit_if_stmt(const IfStmt& stmt) = 0;
-			virtual T visit_while_stmt(const WhileStmt& stmt) = 0;
-			virtual T visit_iterator_for_stmt(const IteratorForStmt& stmt) = 0;
-			virtual T visit_range_for_stmt(const RangeForStmt& stmt) = 0;
-			virtual T visit_loop_stmt(const LoopStmt& stmt) = 0;
-			virtual T visit_block_stmt(const BlockStmt& stmt) = 0;
-		};
-
-		template<typename T>
-		virtual T accept(Visitor<T>& visitor) const = 0;
-
+		virtual Result accept(StmtVisitor& visitor) const = 0;
 		virtual ~Stmt() = default;
-	
 	}; 
 
 	struct ExprStmt : Stmt {
-		Expr expr;
+		std::unique_ptr<Expr> expr;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_expr_stmt(*this);
 		}
 	};
 
 	struct ReturnStmt : Stmt {
 		Token keyword;
-		Expr value;
+		std::unique_ptr<Expr> value;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_return_stmt(*this);
 		}
 	};
 
 	struct IfStmt : Stmt {
-		Expr condition;
-		Stmt then_branch;
-		Stmt else_branch;
+		std::unique_ptr<Expr> condition;
+		std::unique_ptr<Stmt> then_branch;
+		std::unique_ptr<Stmt> else_branch;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_if_stmt(*this);
 		}
 	};
 
 	struct WhileStmt : Stmt {
-		Expr condition;
-		Stmt body;
+		std::unique_ptr<Expr> condition;
+		std::unique_ptr<Stmt> body;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_while_stmt(*this);
 		}
 	};
 
 	struct ForStmt : Stmt {
 		Token name;
-		Stmt body;
+		std::unique_ptr<Stmt> body;
 	};
 
 	struct IteratorForStmt : ForStmt {
-		Expr collection;
+		std::unique_ptr<Expr> collection;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_iterator_for_stmt(*this);
 		}
 	};
 
 	struct RangeForStmt : Stmt {
-		Expr start_expr;
-		Expr end_expr;
+		std::unique_ptr<Expr> start_expr;
+		std::unique_ptr<Expr> end_expr;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_range_for_stmt(*this);
 		}
 	};
 
 	struct LoopStmt : Stmt {
-		Stmt body;
+		std::unique_ptr<Stmt> body;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_loop_stmt(*this);
 		}
 	};
 
 	struct BlockStmt : Stmt {
-		std::vector<Stmt> stmts;
+		std::vector<std::unique_ptr<Stmt>> stmts;
 
-		template<typename T>
-		T accept(Visitor<T>& visitor) const override {
+		Result accept(StmtVisitor& visitor) const override {
 			return visitor.visit_block_stmt(*this);
 		}
 	};

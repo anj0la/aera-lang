@@ -79,9 +79,9 @@ namespace aera {
 		// Keywords
 
 		Fn, Let, Mut, Const, Pub,
-		If, Else, For, While, Loop, Match, Break, Continue, Return,
-		Import, Class, Struct, Enum, Interface, Alias, Self, As,
-		In, True, False, None, Bind,
+		If, Else, For, While, Loop, Match, Break, Continue, Return, In, 
+		Import, Class, Struct, Enum, Trait, Modifies, Alias, Self, As, Bind,
+        True, False, None,
 
 		Illegal, Eof
 	};
@@ -105,7 +105,8 @@ namespace aera {
         {"class", TokenType::Class},
         {"struct", TokenType::Struct},
         {"enum", TokenType::Enum},
-        {"interface", TokenType::Interface},
+        {"trait", TokenType::Trait},
+        {"modifies", TokenType::Modifies},
         {"alias", TokenType::Alias},
         {"self", TokenType::Self},
         {"as", TokenType::As},
@@ -113,7 +114,7 @@ namespace aera {
         {"true", TokenType::BoolLiteral},
         {"false", TokenType::BoolLiteral},
         {"none", TokenType::None},
-        {"cpp", TokenType::Bind}
+        {"bind", TokenType::Bind}
     };
 
     inline const std::unordered_set<std::string> valid_int_suffixes = {
