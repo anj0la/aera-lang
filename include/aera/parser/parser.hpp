@@ -38,19 +38,19 @@ namespace aera::parser {
 		std::unique_ptr<Expr> assignment();
 		std::unique_ptr<Expr> conditional();
 		std::unique_ptr<Expr> logical_or();
-		void logical_and();
-		void bitwise_or();
-		void bitwise_xor();
-		void bitwise_and();
-		void equality();
-		void comparision();
-		void shift();
-		void term();
-		void factor();
-		void unary();
-		void postfix();
-		void primary();
-		void argument_list();
+		std::unique_ptr<Expr> logical_and();
+		std::unique_ptr<Expr> bitwise_or();
+		std::unique_ptr<Expr> bitwise_xor();
+		std::unique_ptr<Expr> bitwise_and();
+		std::unique_ptr<Expr> equality();
+		std::unique_ptr<Expr> comparison();
+		std::unique_ptr<Expr> shift();
+		std::unique_ptr<Expr> term();
+		std::unique_ptr<Expr> factor();
+		std::unique_ptr<Expr> unary();
+		std::unique_ptr<Expr> postfix();
+		std::unique_ptr<Expr> primary();
+		std::vector<std::unique_ptr<Expr>> argument_list();
 
 		// Statements
 
@@ -69,7 +69,8 @@ namespace aera::parser {
 
 		template <class... T>
 		bool match(T... type);
-		Token consume();
+		bool check(TokenType type); 
+		Token consume(TokenType type, const std::string& message);
 		Token advance();
 		bool is_at_end();
 		Token peek();

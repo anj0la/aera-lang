@@ -35,7 +35,7 @@ namespace aera::parser {
 	struct Unary;
 	struct ArrayAcces;
 	struct FnCall;
-	struct MemberAccess;
+	struct FieldAccess;
 	struct Grouping;
 	struct Literal;
 	struct Identifier;
@@ -207,7 +207,7 @@ namespace aera::parser {
 		virtual Result visit_unary_expr(const Unary& expr) = 0;
 		virtual Result visit_array_access_expr(const ArrayAccess& expr) = 0;
 		virtual Result visit_fn_call_expr(const FnCall& expr) = 0;
-		virtual Result visit_member_access_expr(const MemberAccess& expr) = 0;
+		virtual Result visit_field_access_expr(const FieldAccess& expr) = 0;
 		virtual Result visit_grouping_expr(const Grouping& expr) = 0;
 		virtual Result visit_literal_expr(const Literal& expr) = 0;
 		virtual Result visit_identifier_expr(const Identifier& expr) = 0;
@@ -287,12 +287,12 @@ namespace aera::parser {
 		}
 	};
 
-	struct MemberAccess : Expr {
+	struct FieldAccess : Expr {
 		std::unique_ptr< Expr> obj;
 		Token name;
 
 		Result accept(ExprVisitor& visitor) const override {
-			return visitor.visit_member_access_expr(*this);
+			return visitor.visit_field_access_expr(*this);
 		}
 
 		bool is_lvalue() const override { 
