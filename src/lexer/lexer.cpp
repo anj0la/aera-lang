@@ -1,9 +1,13 @@
 #include <aera/lexer/lexer.hpp>
 #include <iostream>
+#include <filesystem>
 
 namespace aera::lexer {
 
-	Lexer::Lexer(std::string p_input) : input(p_input) {}
+	Lexer::Lexer(DiagnosticReporter& reporter, const std::string& filename, const std::string& source) : reporter_(reporter), filename(filename),
+	source(source) {
+		
+	}
 
 	std::vector<Token> Lexer::tokenize() {
 
@@ -13,7 +17,7 @@ namespace aera::lexer {
 			read_token();
 		}
 
-		tokens.push_back(Token(TokenType::Eof, "", line, col));
+		tokens.push_back(Token(TokenType::Eof, "", current_location()));
 		return tokens;
 	}
 
@@ -21,8 +25,20 @@ namespace aera::lexer {
 		return had_error;
 	}
 
+	std::vector<std::string> Lexer::read_lines_from_source() {
+
+	}
+
+	SourceLocation Lexer::current_location() const {
+		return SourceLocation{ filename, line, col };
+	}
+
+	SourceLocation Lexer::start_location() const {
+		return SourceLocation{ filename, line, start_col };
+	}
+
 	char Lexer::advance() {
-		char ch = input[index];
+		char ch = source[index];
 
 		switch (ch) {
 			case '\n':
@@ -106,19 +122,19 @@ namespace aera::lexer {
 			return '\0';
 		}
 
-		return input[index];
+		return source[index];
 	}
 
 	char Lexer::peek_next() {
-		if (index + 1 >= input.length()) {
+		if (index + 1 >= source.length()) {
 			return '\0';
 		}
 
-		return input[index + 1];
+		return source[index + 1];
 	}
 
 	bool Lexer::is_at_end() {
-		return index >= input.length();
+		return index >= source.length();
 	}
 
 	int Lexer::current_line() const {
@@ -129,13 +145,22 @@ namespace aera::lexer {
 		return col;
 	}
 
-	void Lexer::add_token(TokenType type, const std::string& lexeme) {
-		tokens.push_back(Token(type, lexeme, line, start_col));
+	void Lexer::add_token(TokenType type, const std::string& lexeme, const SourceLocation loc, const std::optional<Value>& p_value) {
+		tokens.push_back(Token(type, lexeme, start_location()));
+	}
+
+	Token(TokenType p_type, const std::string& p_lexeme, const SourceLocation& p_loc, const std::optional<Value>& p_value = std::nullopt,
+		const std::optional<std::string>& p_suffix = std::nullopt)
+		: type(p_type), lexeme(p_lexeme), loc(p_loc), value(p_value), suffix(p_suffix) {
+	}
+
+	void Lexer::add_token(TokenType type, const std::string& lexeme, Value literal) {
+		tokens.push_back(Token(type, lexeme, start_location()));
 	}
 
 	void Lexer::add_token(TokenType type) {
-		std::string text = input.substr(start, index - start);
-		tokens.push_back(Token(type, text, line, start_col));
+		std::string text = source.substr(start, index - start);
+		tokens.push_back(Token(type, text, start_location()));
 	}
 
 	bool Lexer::match(char expected) {
@@ -143,7 +168,7 @@ namespace aera::lexer {
 			return false;
 		}
 
-		if (input[index] != expected) {
+		if (source[index] != expected) {
 			return false;
 		}
 
@@ -427,7 +452,7 @@ namespace aera::lexer {
 				advance();
 			}
 
-			std::string suffix = input.substr(suffix_start, index - suffix_start);
+			std::string suffix = source.substr(suffix_start, index - suffix_start);
 
 			bool valid_int_suffix = (valid_int_suffixes.find(suffix) != valid_int_suffixes.end());
 			bool valid_float_suffix = (valid_float_suffixes.find(suffix) != valid_float_suffixes.end());
@@ -436,7 +461,7 @@ namespace aera::lexer {
 				is_float = true; // Upgrade to float (e.g., 3f32)
 			}
 			else if (!valid_int_suffix) { // Not valid float or int suffix
-				std::string malformed_literal = input.substr(start, index - start);
+				std::string malformed_literal = source.substr(start, index - start);
 				had_error = true;
 				add_token(TokenType::Illegal, "Invalid integer suffix: " + malformed_literal);
 				return;
@@ -449,13 +474,13 @@ namespace aera::lexer {
 			if (is_float) { // e.g., 3f32.. is illegal
 				advance();
 				advance();
-				std::string error_text = input.substr(start, index - start);
+				std::string error_text = source.substr(start, index - start);
 				had_error = true;
 				add_token(TokenType::Illegal, "Range operator cannot follow a float literal: " + error_text);
 				return;
 			}
 			else {
-				add_token(TokenType::IntLiteral, input.substr(start, index - start));
+				add_token(TokenType::IntLiteral, source.substr(start, index - start));
 				return; // Main loop consumes ..
 			}	
 		}
@@ -480,10 +505,10 @@ namespace aera::lexer {
 					advance();
 				}
 
-				std::string suffix = input.substr(suffix_start, index - suffix_start);
+				std::string suffix = source.substr(suffix_start, index - suffix_start);
 
 				if (valid_float_suffixes.find(suffix) == valid_float_suffixes.end()) {
-						std::string malformed_literal = input.substr(start, index - start);
+						std::string malformed_literal = source.substr(start, index - start);
 						add_token(TokenType::Illegal, "Invalid suffix for float literal: " + malformed_literal);
 						had_error = true;
 						return;
@@ -497,14 +522,14 @@ namespace aera::lexer {
 			if (peek_next() == '.' && is_float) {
 				advance();
 				advance();
-				std::string error_text = input.substr(start, index - start);
+				std::string error_text = source.substr(start, index - start);
 				had_error = true;
 				add_token(TokenType::Illegal, "Range operator cannot follow a float literal: " + error_text);
 				return;
 			}
 			else {
 				advance();
-				std::string error_text = input.substr(start, index - start);
+				std::string error_text = source.substr(start, index - start);
 				add_token(TokenType::Illegal, "Malformed number literal: " + error_text);
 				had_error = true;
 				return;
@@ -512,7 +537,7 @@ namespace aera::lexer {
 		}
 
 		// Otherwise add as float / int literal
-		std::string num_as_str = input.substr(start, index - start);
+		std::string num_as_str = source.substr(start, index - start);
 
 		if (is_float) {
 			add_token(TokenType::FloatLiteral, num_as_str);
@@ -527,7 +552,7 @@ namespace aera::lexer {
 			advance();
 		}
 
-		std::string text = input.substr(start, index - start);
+		std::string text = source.substr(start, index - start);
 		TokenType type;
 		auto it = keywords.find(text);
 

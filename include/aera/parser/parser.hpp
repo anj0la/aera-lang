@@ -50,6 +50,12 @@ namespace aera::parser {
 		std::unique_ptr<Expr> unary();
 		std::unique_ptr<Expr> postfix();
 		std::unique_ptr<Expr> primary();
+		std::unique_ptr<Expr> integer_literal();
+		std::unique_ptr<Expr> float_literal();
+		std::unique_ptr<Expr> character_literal();
+		std::unique_ptr<Expr> string_literal();
+		std::unique_ptr<Expr> bool_literal();
+		std::unique_ptr<Expr> identifier();
 		std::vector<std::unique_ptr<Expr>> argument_list();
 
 		// Statements

@@ -34,6 +34,7 @@ namespace aera::parser {
 		}
 		return expr;
 	}
+
 	std::unique_ptr<Expr> Parser::conditional() {
 		auto expr = logical_or();
 
@@ -209,10 +210,10 @@ namespace aera::parser {
 				expr = std::make_unique<FieldAccess>(std::move(expr), name);
 			}
 			// Arguments
-			else if (match(TokenType::LeftParen)) {  // "(" [argument_list] ")"
+			else if (match(TokenType::LeftParen)) {
 				std::vector<std::unique_ptr<Expr>> args;
 				if (!check(TokenType::RightParen)) {
-					args = argument_list();  // Parse arguments if any
+					args = argument_list();
 				}
 				consume(TokenType::RightParen, "Expected ')' after arguments");
 				expr = std::make_unique<FnCall>(std::move(expr), std::move(args));
@@ -230,12 +231,39 @@ namespace aera::parser {
 		return expr;
 	}
 
-	// primary = literal | identifier | "(" expression ")" | unsafe ;
-	// This is where I need to handle all my specific literals and whatnot
-
 	std::unique_ptr<Expr> Parser::primary() {
-		
-	}
+
+		if (match(TokenType::IntLiteral)) {
+			return integer_literal();
+		}
+		if (match(TokenType::FloatLiteral)) {
+			return float_literal();
+		}
+		if (match(TokenType::CharacterLiteral)) {
+			return std::make_unique<Literal>(prev().lexeme[0]); // converts string to char literal
+		}
+		if (match(TokenType::StringLiteral)) {
+			return std::make_unique<Literal>(prev().lexeme);
+		}
+		if (match(TokenType::True)) {
+			return std::make_unique<Literal>(true);
+		}
+		if (match(TokenType::False)) {
+			return std::make_unique<Literal>(false);
+		}
+
+		if (match(TokenType::Identifier)) {
+			return identifier();
+		}
+
+		if (match(TokenType::LeftParen)) {
+			auto expr = expression();
+			consume(TokenType::RightParen, "Expected ')' after expression");
+			return std::make_unique<Grouping>(std::move(expr));
+		}
+
+			return nullptr; // Throw parse error, or print error idk
+		}
 
 	std::vector<std::unique_ptr<Expr>> Parser::argument_list() {
 		std::vector<std::unique_ptr<Expr>> args;

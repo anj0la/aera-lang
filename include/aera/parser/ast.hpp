@@ -76,19 +76,6 @@ namespace aera::parser {
 
 	using Result = std::variant<>; // Will store the Type, and semantic analyzer, symbol table and cpp codegen structs
 
-	// Base node (Abstract)
-
-	struct ASTNode {
-		SourceLocation loc;
-		virtual ~ASTNode() = default;
-	};
-
-	struct SourceLocation {
-		size_t line = 1;
-		size_t col = 1;
-		std::optional<std::string> filename; // add support later
-	};
-
 	// Visitor (Declarations)
 
 	struct DeclVisitor {
@@ -106,11 +93,11 @@ namespace aera::parser {
 
 	// Declarations
 
-	struct Program : ASTNode {
+	struct Program {
 		std::vector<Decl> decls;
 	};
 
-	struct Decl : ASTNode { // Abstract
+	struct Decl { // Abstract
 		virtual Result accept(DeclVisitor& visitor) const = 0;
 		virtual ~Decl() = default;
 	};
@@ -211,13 +198,11 @@ namespace aera::parser {
 		virtual Result visit_grouping_expr(const Grouping& expr) = 0;
 		virtual Result visit_literal_expr(const Literal& expr) = 0;
 		virtual Result visit_identifier_expr(const Identifier& expr) = 0;
-		virtual Result visit_bind_expr(const Bind& expr) = 0;
-
 	};
 
 	// Expressions
 
-	struct Expr : ASTNode {
+	struct Expr {
 		virtual bool is_lvalue() const { 
 			return false; 
 		}
@@ -311,8 +296,8 @@ namespace aera::parser {
 
 	struct Literal : Expr {
 		Value value;
-		Type type;
-		std::string raw_text; // would return typeinfo
+		// Type type;
+		// std::string raw_text; // would return typeinfo
 
 		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_literal_expr(*this);
@@ -321,6 +306,8 @@ namespace aera::parser {
 
 	struct Identifier : Expr {
 		Token name;
+		
+		explicit Identifier(Token p_name) : name(p_name) {}
 
 		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_identifier_expr(*this);
@@ -328,15 +315,6 @@ namespace aera::parser {
 
 		bool is_lvalue() const override { 
 			return true; 
-		}
-	};
-
-	struct Bind : Expr {
-		std::unique_ptr<Stmt> stmt;
-		std::optional<std::unique_ptr< Expr>> expr;
-
-		Result accept(ExprVisitor& visitor) const override {
-			return visitor.visit_bind_expr(*this);
 		}
 	};
 
@@ -356,7 +334,7 @@ namespace aera::parser {
 
 	// Statements
 
-	struct Stmt : ASTNode { // Abstract
+	struct Stmt { // Abstract
 		virtual Result accept(StmtVisitor& visitor) const = 0;
 		virtual ~Stmt() = default;
 	}; 

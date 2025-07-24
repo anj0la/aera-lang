@@ -74,7 +74,7 @@ namespace aera {
 
 		// Literals
 
-		Identifier, IntLiteral, FloatLiteral, CharacterLiteral, StringLiteral, BoolLiteral,
+		Identifier, IntLiteral, FloatLiteral, CharacterLiteral, StringLiteral, True, False,
 
 		// Keywords
 
@@ -111,8 +111,8 @@ namespace aera {
         {"self", TokenType::Self},
         {"as", TokenType::As},
         {"in", TokenType::In},
-        {"true", TokenType::BoolLiteral},
-        {"false", TokenType::BoolLiteral},
+        {"true", TokenType::True},
+        {"false", TokenType::False},
         {"none", TokenType::None},
         {"bind", TokenType::Bind}
     };
