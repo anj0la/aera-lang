@@ -21,6 +21,9 @@ namespace aera {
         Period,                     // .
 		Semicolon,                  // ;
         Colon,                      // ;
+
+        // New line
+        Newline,
 		
         // Operators (from longest to shortest)
 

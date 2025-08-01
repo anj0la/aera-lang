@@ -40,19 +40,7 @@ namespace aera {
 
     void DiagnosticReporter::print_all() {
         for (const auto& d : diags) {
-            print_diagnostic(d); // no need to switch, don't matter
-
-            switch (d.severity) {
-                case Diagnostic::Severity::Error:
-                    print_error(d);
-                    break;
-                case Diagnostic::Severity::Warning:
-                    print_warning(d);
-                    break;
-                case Diagnostic::Severity::Note:
-                    print_note(d);
-                    break;
-            }
+            print_diagnostic(d);
         }
     }
 
@@ -98,7 +86,7 @@ namespace aera {
             << ": " << severity_to_string() << ": " << d.msg << std::endl;
 
         // Second line -> source line, only valid for ERROR / WARNINGS
-        if (d.severity == Diagnostic::Severity::Error || Diagnostic::Severity::Warning) {
+        if (d.severity == Diagnostic::Severity::Error || d.severity == Diagnostic::Severity::Warning) {
             std::cerr << "    " << d.source_line << std::endl;
         }
 
@@ -122,7 +110,7 @@ namespace aera {
 }
 
 
-main.aera:7:16: error :unexpected ','
+main.aera:7:16: error: unexpected ','
     fn(first, second, )
               ^~~~~~~~
     note: remove the comma after the last argument

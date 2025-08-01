@@ -89,7 +89,7 @@ namespace aera::parser {
 		virtual Result visit_field_decl(const FieldDecl& decl) = 0;
 		virtual Result visit_trait_decl(const TraitDecl& decl) = 0;
 		virtual Result visit_with_decl(const WithDecl& decl) = 0;
-		};
+	};
 
 	// Declarations
 
@@ -127,7 +127,7 @@ namespace aera::parser {
 
 	struct ConstDecl : Decl { // IMMUTABLE, cannot be changed
 		Token name;
-		std::optional<Type> decl_type; // optionally declared by user
+		Type type;
 		std::unique_ptr<Expr> initializer;
 
 		Result accept(DeclVisitor& visitor) const override {

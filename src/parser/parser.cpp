@@ -47,7 +47,6 @@ namespace aera::parser {
 				std::move(condition),
 				std::move(else_expr));
 		}
-
 		return expr;
 	}
 
@@ -60,7 +59,6 @@ namespace aera::parser {
 
 			expr = std::make_unique<Binary>(std::move(expr), op, std::move(rhs));
 		}
-
 		return expr;
 	}
 
@@ -73,7 +71,6 @@ namespace aera::parser {
 
 			expr = std::make_unique<Binary>(std::move(expr), op, std::move(rhs));
 		}
-
 		return expr;
 	}
 	
