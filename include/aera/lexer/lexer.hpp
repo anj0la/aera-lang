@@ -50,7 +50,6 @@ namespace aera::lexer {
 
 		int get_token_length() const;
 		void add_token(TokenType type, const std::string& lexeme, const Value& value);
-		void add_token(TokenType type, const std::string& lexeme);
 		void add_token(TokenType type);
 		bool match(char expected);
 		void read_punctuation(char c);
@@ -75,5 +74,7 @@ namespace aera::lexer {
 		bool is_alnum(char c) const;
 		bool is_symbol(char c) const;
 		bool is_space(char c) const;
+		bool is_printable(char c) const;
+		void error(const std::string& msg, const std::string& note = "");
 	};
 }

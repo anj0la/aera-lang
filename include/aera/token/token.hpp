@@ -18,10 +18,10 @@ namespace aera {
         TokenType type;
         std::string lexeme;
         SourceLocation loc;
-        std::optional<Value> value;
+        Value value;
 
 
-        Token(TokenType p_type, const std::string& p_lexeme, const SourceLocation& p_loc, const std::optional<Value>& p_value = std::nullopt)
+        Token(TokenType p_type, const std::string& p_lexeme, const SourceLocation& p_loc, const Value& p_value)
             : type(p_type), lexeme(p_lexeme), loc(p_loc), value(p_value) {
         }
 
