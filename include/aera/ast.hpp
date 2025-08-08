@@ -8,9 +8,10 @@
 #include <variant>
 #include <optional>
 
-#include <aera/token/token.hpp>
+#include <aera/token.hpp>
+#include <aera/types.hpp>
 
-namespace aera::parser {
+namespace aera {
 
 	// Forward Declarations
 
@@ -23,25 +24,24 @@ namespace aera::parser {
 	struct StructDecl;
 	struct FieldDecl;
 	struct ClassDecl;
+	struct ClassMember;
 	struct TraitDecl;
 	struct WithDecl;
 	struct Expr;
 	struct Assignment;
-	struct IdentifierLValue;
-	struct ArrayAccessLValue;
-	struct FieldAccessLValue;
 	struct Conditional;
 	struct Binary;
 	struct Unary;
+	struct Cast;
 	struct ArrayAcces;
 	struct FnCall;
 	struct FieldAccess;
 	struct Grouping;
 	struct Literal;
 	struct Identifier;
-	struct Bind;
 	struct Stmt;
 	struct ExprStmt;
+	struct ReturnStmt;
 	struct IfStmt;
 	struct WhileStmt;
 	struct ForStmt;
@@ -50,31 +50,9 @@ namespace aera::parser {
 	struct LoopStmt;
 	struct BlockStmt;
 
-	// Types
-
-	using Value = std::variant<int8_t, int16_t, int32_t, int64_t, 
-		uint8_t, uint16_t, uint32_t, uint64_t, 
-		float, double, std::string, char, bool>;
-
-	using CppType = std::variant<int8_t, int16_t, int32_t, int64_t,
-		uint8_t, uint16_t, uint32_t, uint64_t,
-		float, double, std::string, char, bool>;
-
-	enum class Type {
-		// Integer
-		Int8, Int16, Int32, Int64,
-		Uint8, uint16, Uint32, Uint64,
-
-		// Float
-		Float32, Float64,
-
-		// Others
-		String, Character, Bool
-	};
-
 	// Result
 
-	using Result = std::variant<>; // Will store the Type, and semantic analyzer, symbol table and cpp codegen structs
+	using Result = std::variant<std::monostate, std::string>; // success, error
 
 	// Visitor (Declarations)
 
@@ -94,19 +72,21 @@ namespace aera::parser {
 	// Declarations
 
 	struct Program {
-		std::vector<Decl> decls;
+		std::vector<std::unique_ptr<Decl>> decls;
 	};
 
-	struct Decl { // Abstract
+	struct Decl : Stmt { // Abstract
 		virtual Result accept(DeclVisitor& visitor) const = 0;
 		virtual ~Decl() = default;
 	};
 
-	struct FnDecl : Decl { // Private visibility by default
-		bool is_public = false;
+	struct FnDecl : Decl {
 		Token name;
-		std::vector<std::pair<Token, Type>> params;
-		std::optional<Type> return_type;
+		std::vector<Token> decorators;
+		std::optional<TokenType> visibility_modifier;
+		std::optional<TokenType> behaviour_modifier; // currently supporting modifies, could have others as well (turn into vector)
+		std::vector<std::pair<Token, std::unique_ptr<Type>>> params;
+		std::optional<std::unique_ptr<Type>> return_type;
 		std::vector<std::unique_ptr<Stmt>> body;
 
 		Result accept(DeclVisitor& visitor) const override {
@@ -115,9 +95,9 @@ namespace aera::parser {
 	};
 
 	struct VarDecl : Decl { // Immutable by default, CAN be changed
-		bool is_mutable = false;
 		Token name;
-		std::optional<Type> decl_type; // optionally declared by user
+		bool is_mutable = false;
+		std::optional<std::unique_ptr<Type>> decl_type; // optionally declared by user
 		std::optional<std::unique_ptr<Expr>> initializer;
 
 		Result accept(DeclVisitor& visitor) const override {
@@ -127,7 +107,7 @@ namespace aera::parser {
 
 	struct ConstDecl : Decl { // IMMUTABLE, cannot be changed
 		Token name;
-		Type type;
+		std::unique_ptr<Type> type;
 		std::unique_ptr<Expr> initializer;
 
 		Result accept(DeclVisitor& visitor) const override {
@@ -146,8 +126,8 @@ namespace aera::parser {
 
 	struct FieldDecl : Decl {
 		Token name;
-		Type type;
-		std::unique_ptr<Expr> initializer;
+		std::unique_ptr<Type> type;
+		std::optional<std::unique_ptr<Expr>> initializer;
 
 		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_field_decl(*this);
@@ -156,11 +136,24 @@ namespace aera::parser {
 
 	struct ClassDecl : Decl {
 		Token name;
-		std::vector<std::unique_ptr<FieldDecl>> fdecls;
-		std::vector<std::unique_ptr<FnDecl>> fndecls;
+		std::optional<Token> parent_class;
+		std::vector<ClassMember> members;
 
 		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_class_decl(*this);
+		}
+	};
+
+	struct ClassMember {
+		enum class ClassTypeKind { Field, Function };
+		ClassTypeKind type;
+		std::unique_ptr<Decl> decl;
+
+		static ClassMember make_field(std::unique_ptr<FieldDecl> field) {
+			return { ClassTypeKind::Field, std::move(field) };
+		}
+		static ClassMember make_function(std::unique_ptr<FnDecl> fn) {
+			return { ClassTypeKind::Function, std::move(fn) };
 		}
 	};
 
@@ -174,9 +167,9 @@ namespace aera::parser {
 	};
 
 	struct WithDecl : Decl {
-		Token trait_name; // The trait
-		Token type_name;  // The user-defined type to apply the trait to
-		std::vector<FnDecl> fndecls;
+		Token trait_name; // the trait
+		Token type_name;  // the user-defined type to apply the trait to
+		std::vector<std::unique_ptr<FnDecl>> fndecls;
 
 		Result accept(DeclVisitor& visitor) const override {
 			return visitor.visit_with_decl(*this);
@@ -192,6 +185,7 @@ namespace aera::parser {
 		virtual Result visit_conditional_expr(const Conditional& expr) = 0;
 		virtual Result visit_binary_expr(const Binary& expr) = 0;
 		virtual Result visit_unary_expr(const Unary& expr) = 0;
+		virtual Result visit_cast_expr(const Cast& expr) = 0;
 		virtual Result visit_array_access_expr(const ArrayAccess& expr) = 0;
 		virtual Result visit_fn_call_expr(const FnCall& expr) = 0;
 		virtual Result visit_field_access_expr(const FieldAccess& expr) = 0;
@@ -249,6 +243,15 @@ namespace aera::parser {
 		}
 	};
 
+	struct Cast : Expr {
+		std::unique_ptr<Expr> expr;
+		std::unique_ptr<Type> target_type;
+
+		Result accept(ExprVisitor& visitor) const override {
+			return visitor.visit_cast_expr(*this);
+		}
+	};
+
 	struct ArrayAccess : Expr {
 		std::unique_ptr< Expr> expr;
 		int64_t index;
@@ -295,10 +298,9 @@ namespace aera::parser {
 	};
 
 	struct Literal : Expr {
-		Value value;
-		// Type type;
-		// std::string raw_text; // would return typeinfo
-
+		Token token;
+		std::unique_ptr<Type> type;
+		
 		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_literal_expr(*this);
 		}
@@ -307,8 +309,6 @@ namespace aera::parser {
 	struct Identifier : Expr {
 		Token name;
 		
-		explicit Identifier(Token p_name) : name(p_name) {}
-
 		Result accept(ExprVisitor& visitor) const override {
 			return visitor.visit_identifier_expr(*this);
 		}
@@ -388,7 +388,7 @@ namespace aera::parser {
 		}
 	};
 
-	struct RangeForStmt : Stmt {
+	struct RangeForStmt : ForStmt {
 		std::unique_ptr<Expr> start_expr;
 		std::unique_ptr<Expr> end_expr;
 

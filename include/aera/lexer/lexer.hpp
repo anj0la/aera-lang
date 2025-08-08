@@ -1,7 +1,8 @@
 #pragma once
 
-#include <aera/token/token.hpp>
-#include <aera/diagnostics/diagnostics.hpp>
+#include <aera/token.hpp>
+#include <aera/diagnostics.hpp>
+#include <aera/source_context.hpp>
 #include <string>
 #include <vector>
 #include <optional>
@@ -10,32 +11,23 @@ namespace aera::lexer {
 
 	class Lexer {
 	public:
-		Lexer(DiagnosticReporter& reporter, const std::string& filename, const std::string& source);
-
-		// Update the lexer:
-		// Pass the DiagnosticsReporter as a variable
-		// Create a vector of source lines, read from input in constructorr
-
-		// Whenever an error occures, just add it to the reporter
-		// Fix add token to add more information and more importantly, convert the proper types
+		Lexer(const SourceContext& source_context, DiagnosticReporter& reporter, const std::string& source) :
+		source_context_(source_context), reporter_(reporter), source(source) {}
 
 		~Lexer() = default;
 
 		std::vector<Token> tokenize();
 
 	private:
+		const SourceContext& source_context_;
 		DiagnosticReporter& reporter_;
-		std::string filename;
 		std::string source;
-		std::vector<std::string> source_lines;
 		std::vector<Token> tokens;
 		int start = 0;
 		int index = 0;
 		int line = 1;
 		int start_col = 1;
 		int col = 1;
-
-		void read_lines_from_source();
 
 		SourceLocation current_location() const;
 		SourceLocation start_location() const;

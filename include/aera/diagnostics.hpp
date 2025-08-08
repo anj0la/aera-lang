@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aera/common/source_location.hpp>
+#include <aera/source_location.hpp>
 #include <string>
 #include <utility>
 #include <vector>

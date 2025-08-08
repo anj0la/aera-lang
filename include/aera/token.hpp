@@ -1,7 +1,7 @@
 #pragma once
 
-#include <aera/token/token_type.hpp>
-#include <aera/common/source_location.hpp>
+#include <aera/token_type.hpp>
+#include <aera/source_location.hpp>
 #include <string>
 #include <cstdint>
 #include <optional>

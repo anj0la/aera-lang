@@ -1,8 +1,10 @@
 #pragma once
 
-#include <aera/parser/ast.hpp>
+#include <aera/ast.hpp>
 #include <aera/lexer/lexer.hpp>
-#include <stdexcept> // For now, Parse Errors throw an std::runtime exception
+#include <aera/diagnostics.hpp>
+#include <aera/source_context.hpp>
+#include <optional>
 #include <utility>  
 #include <type_traits>
 
@@ -10,27 +12,30 @@ namespace aera::parser {
 
 	class Parser {
 	public:
-		Parser(const std::vector<Token>& p_tokens) : tokens(p_tokens) {}
+		Parser(const SourceContext& source_context, DiagnosticReporter& reporter, const std::vector<Token>& p_tokens) : 
+			source_context_(source_context), reporter_(reporter), tokens(p_tokens) {}
 		~Parser() = default;
 
-		struct ParseError : public std::runtime_error {
-			using std::runtime_error::runtime_error;
-		};
+		std::vector<std::unique_ptr<Decl>> parse();
 
 	private:
+		const SourceContext& source_context_;
+		DiagnosticReporter& reporter_;
 		const std::vector<Token> tokens;
 		int current = 1;
 
 		// Declarations
 
-		void declaration();
-		void fn_declaration();
-		void var_declaration();
-		void const_declaration();
-		void struct_declaration();
-		void class_declaration();
-		void trait_declaration();
-		void with_declaration();
+		std::unique_ptr<Decl> declaration();
+		std::unique_ptr<Decl> fn_declaration();
+		std::unique_ptr<Decl> var_declaration();
+		std::unique_ptr<Decl> const_declaration();
+		std::unique_ptr<Decl> struct_declaration();
+		std::unique_ptr<Decl> field_declaration();
+		std::unique_ptr<Decl> class_declaration();
+		std::vector<ClassMember> class_body();
+		std::unique_ptr<Decl> trait_declaration();
+		std::unique_ptr<Decl> with_declaration();
 
 		// Expressions
 
@@ -48,41 +53,48 @@ namespace aera::parser {
 		std::unique_ptr<Expr> term();
 		std::unique_ptr<Expr> factor();
 		std::unique_ptr<Expr> unary();
+		std::unique_ptr<Expr> cast();
 		std::unique_ptr<Expr> postfix();
 		std::unique_ptr<Expr> primary();
-		std::unique_ptr<Expr> integer_literal();
-		std::unique_ptr<Expr> float_literal();
-		std::unique_ptr<Expr> character_literal();
-		std::unique_ptr<Expr> string_literal();
-		std::unique_ptr<Expr> bool_literal();
-		std::unique_ptr<Expr> identifier();
 		std::vector<std::unique_ptr<Expr>> argument_list();
 
 		// Statements
 
-		void statement();
-		void expression_statement();
-		void return_statement();
-		void if_statement();
-		void while_statement();
-		void for_statement();
-		void iterator_for_statement();
-		void range_for_statement();
-		void loop_statement();
-		void block();
+		std::unique_ptr<Stmt> statement();
+		std::unique_ptr<Stmt> expression_statement();
+		std::unique_ptr<Stmt> return_statement();
+		std::unique_ptr<Stmt> if_statement();
+		std::unique_ptr<Stmt> while_statement();
+		std::unique_ptr<Stmt> for_statement();
+		std::unique_ptr<Stmt> loop_statement();
+		std::unique_ptr<BlockStmt> block();
+
+		// Types
+
+		std::unique_ptr<Type> parse_type();
+		std::unique_ptr<Type> parse_primitive_type(const std::string& name);
+		std::unique_ptr<Type> parse_generic_type(const std::string& name);
+		std::unique_ptr<Type> parse_user_type(const std::string& name);
+		std::vector<int> parse_array_dimensions();
+
+		bool is_primitive_type();
 
 		// Other parsing functions
 
 		template <class... T>
 		bool match(T... type);
 		bool check(TokenType type); 
-		Token consume(TokenType type, const std::string& message);
+		bool check_next(TokenType type);
+		std::optional<Token> consume(TokenType type);
 		Token advance();
 		bool is_at_end();
 		Token peek();
+		Token peek_next();
 		Token prev();
 		void sync();
-		ParseError error(Token token, std::string message);
+		bool check_field_declaration();
+		bool check_fn_declaration();
+		void error(const std::string& msg, const std::string& note = "");
 	};
 
 }

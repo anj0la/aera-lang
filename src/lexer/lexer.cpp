@@ -4,11 +4,6 @@
 
 namespace aera::lexer {
 
-	Lexer::Lexer(DiagnosticReporter& reporter, const std::string& filename, const std::string& source) : reporter_(reporter), filename(filename),
-	source(source) {
-		read_lines_from_source(); // if the filepath doesn't exist, the vector is empty
-	}
-
 	std::vector<Token> Lexer::tokenize() {
 
 		while (!is_at_end()) {
@@ -21,28 +16,12 @@ namespace aera::lexer {
 		return tokens;
 	}
 
-	void Lexer::read_lines_from_source() {
-
-		std::ifstream file(filename);
-
-		if (!file.is_open()) {
-			return; // vector remains empty
-		}
-
-		std::string line;
-		while (std::getline(file, line)) {
-			source_lines.emplace_back(line);
-		}
-
-		file.close();
-	}
-
 	SourceLocation Lexer::current_location() const {
-		return SourceLocation{ filename, line, col };
+		return SourceLocation{ source_context_.filename(), line, col};
 	}
 
 	SourceLocation Lexer::start_location() const {
-		return SourceLocation{ filename, line, start_col };
+		return SourceLocation{ source_context_.filename(), line, start_col };
 	}
 
 	char Lexer::advance() {
@@ -603,7 +582,6 @@ namespace aera::lexer {
 		return c >= '0' && c <= '7';
 	}
 
-	
 	bool Lexer::is_alpha(char c) const {
 		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 	}
@@ -628,7 +606,7 @@ namespace aera::lexer {
 	}
 
 	void Lexer::error(const std::string& msg, const std::string& note) {
-		reporter_.add_error(filename, get_token_length(), start_location(), msg, source_lines[line], note);
+		reporter_.add_error(source_context_.filename(), get_token_length(), start_location(), msg, source_context_.get_line(line), note);
 		add_token(TokenType::Illegal);
 	}
 }

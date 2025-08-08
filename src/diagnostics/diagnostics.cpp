@@ -1,4 +1,4 @@
-#include <aera/diagnostics/diagnostics.hpp>
+#include <aera/diagnostics.hpp>
 #include <algorithm>
 #include <iostream>
 

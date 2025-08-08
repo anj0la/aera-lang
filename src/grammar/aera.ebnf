@@ -8,19 +8,21 @@ declaration = function_declaration
             | trait_declaration
             | with_delaration ;
 
-function_declaration = [modifiers] "fn" identifier "(" [parameter_list] ")" ["->", type], block ;
+function_declaration =  { decorator } [visibility_modifier] [behaviour_modifier] "fn" identifier "(" [parameter_list] ")" ["->", type] block ;
+decorator = "@" identifier ;
+visibility_modifier = "pub" ;
+behaviour_modifier = "modifies" ;
 parameter_list = parameter { "," parameter } ;
 parameter = identifier ":" type ;
-modifiers = "pub" | "modifies" ;
 
 variable_declaration = "let" ["mut"] identifier [":" type] ["=" expression ";"] ;
-const_declaration = "const" identifier [":" type] "=" expression ";" ;
+const_declaration = "const" identifier [":" type] "=" expression ;
 
 struct_declaration = "struct" identifier "{" { field_declaration } "}" ;
-field_declaration = identifier ":" type [ "=" expression ] ";" ;
+field_declaration = identifier ":" type [ "=" expression ] ;
 
-class_declaration = "class" identifier [":" identifier] "{" { class_body } "}" ;
-class_body = { class_member } ;
+class_declaration = "class" identifier [":" identifier] class_body ;
+class_body = "{" { class_member } "}" ;
 class_member = field_declaration | function_declaration ;
 
 trait_declaration = "trait" identifier "{" { function_declaration } "}" ;
@@ -45,28 +47,27 @@ factor = unary { ("*" | "/" | "%") unary } ;
 
 unary = ("!" | "-"| "~" | "&" ) unary | cast ;
 cast = postfix ["as" type] ; 
-postfix = primary { ("[" expression "]" | "." identifier | "(" [argument_list] ")"  | "?" ) } ;
+postfix = primary { ("[" expression "]" | "." identifier | "(" [argument_list] ")"  | "?" | "??" ) } ;
 primary = literal | identifier | "(" expression ")"  ;
 
 argument_list = expression { ","  expression } ;
 
-statement = variable_declaration
-            | const_declaration
-            | expression_statement
-            | return_statement
-            | if_statement
-            | while_statement
-            | for_statement
-            | loop_statement
-            | block ;
+statement = declaration
+          | expression_statement
+          | return_statement
+          | if_statement
+          | while_statement
+          | for_statement
+          | loop_statement
+          | block ;
 
-expression_statement = expression ";" ;
-return_statement = "return" [expression] ";" ;
-if_statement = "if" expression statement ["else" statement] ";" ;
-while_statement = "while" expression statement ";" ;
-for_statement = "for" identifier "in" expr [".." expr] statement ";" ; 
-loop_statement = "loop" statement ";" ;
-block = "{" { statement } "}" ";" ;
+expression_statement = expression ;
+return_statement = "return" [expression] ;
+if_statement = "if" expression statement ["else" statement] ;
+while_statement = "while" expression statement ;
+for_statement = "for" identifier "in" expr [".." expr] statement ; 
+loop_statement = "loop" statement ;
+block = "{" { statement } "}" ;
 
 integer_literal = decimal_integer
                 | hexadecimal_integer
@@ -105,7 +106,8 @@ type = primitive_type
      | generic_type 
      | array_type ; 
 
-primitive_type =  "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; user_type = identifier ; 
+primitive_type =  "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
+user_type = identifier ; 
 generic_type = identifier "!<" type_list ">" ; 
 array_type = primitive_type array_dimensions | user_type array_dimensions | generic_type array_dimensions ;
 array_dimensions = ( "[" [ integer_literal ] "]" ) { ( "[" [ integer_literal ] "]" ) } ;

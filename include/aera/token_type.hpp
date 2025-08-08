@@ -83,7 +83,7 @@ namespace aera {
 
 		Fn, Let, Mut, Const, Pub,
 		If, Else, For, While, Loop, Match, Break, Continue, Return, In, 
-		Import, Class, Struct, Enum, Trait, Modifies, Alias, Self, As, Bind,
+		Import, Class, Struct, Enum, Trait, With, Modifies, Alias, Self, As, Bind,
         True, False, None,
 
 		Illegal, Eof
@@ -109,6 +109,7 @@ namespace aera {
         {"struct", TokenType::Struct},
         {"enum", TokenType::Enum},
         {"trait", TokenType::Trait},
+        {"with", TokenType::With},
         {"modifies", TokenType::Modifies},
         {"alias", TokenType::Alias},
         {"self", TokenType::Self},
