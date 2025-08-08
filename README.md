@@ -10,10 +10,10 @@ Aera is designed for developing interactive applications, such as games and grap
 
 Aera operates on four core principles that guide its design:
 
-**Performance** - Compiled language with source-to-source compilation to C++, ownership-based memory management without garbage collection
-**Flexibility** - Trait system for compositional programming, smooth C++ and C interoperability
-**Usability** - Clean, readable syntax inspired by Python and Go, explicit error handling with ? and ?? operators
-**Control** - Explicit memory management with safe pointer types, unsafe operations contained in explicit bind blocks
+- **Performance** - Compiled language with source-to-source compilation to C++, ownership-based memory management without garbage collection
+- **Flexibility** - Trait system for compositional programming, smooth C++ and C interoperability
+- **Usability** - Clean, readable syntax inspired by Python and Go, explicit error handling with ? and ?? operators
+- **Control** - Explicit memory management with safe pointer types, unsafe operations contained in explicit bind blocks
 
 ## Quick Example
 
@@ -35,7 +35,7 @@ Aera is currently in development. Version 0.1 will include:
 
 ## Documentation
 
-For complete language documentation, see the [`docs/specification/README.md`](docs/specification/) directory.
+For complete language documentation, see the [`docs/spec/README.md`](docs/specification/) directory.
 
 ## Getting Started
 
