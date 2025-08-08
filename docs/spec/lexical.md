@@ -19,9 +19,23 @@ The following are reserved keywords, and cannot be used as identifiers:
 - modifies
 - if
 - else
-- 
-Control flow: if, else, for, while, loop, match, break, continue, return
-Reserved: import, class, struct, enum, trait, alias, self, as, bind
+- for
+- while
+- loop
+- match
+- break
+- continue
+- return
+- import
+- class
+- struct
+- enum
+- trait
+- with
+- alias
+- self
+- as
+- bind
 
 Note that as the language expands, so will the reserved keywords.
 
