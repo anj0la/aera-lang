@@ -2,7 +2,7 @@
 
 Aera's grammar is used to parse the sequence of tokens into the abstract syntax tree. It starts off with the first rule which matches an entire Aera program.
 
-```
+```ebnf
 program = { declaration } EOF ;
 ```
 
