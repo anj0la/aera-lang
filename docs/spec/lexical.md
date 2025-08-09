@@ -4,12 +4,11 @@
 Aera source files are encoded in UTF-8.
 
 ## Identifiers
-An identifier starts with an alphabetic character or an underscore (_), followed by any number of alphanumeric characters or underscores. They are case-sensitive.
-Regex: [a-zA-Z_][a-zA-Z0-9_]
+An identifier starts with an alphabetic character or an underscore, followed by any number of alphanumeric characters or underscores: [a-zA-Z_][a-zA-Z0-9_]
 
 ## Keywords
 
-The following are reserved keywords, and cannot be used as identifiers:
+The following are reserved keywords and cannot be used as identifiers:
 
 - fn
 - let
@@ -99,7 +98,7 @@ Listed below are the following punctuation and separator tokens used in Aera:
 | ; or \n  | Statement separator                                                                       |
 
 ### Other Tokens
-Listed below are some other tokens used in Aera that don’t fit into the above categories:
+Listed below are some other tokens used in Aera that donâ€™t fit into the above categories:
 
 | Token | Description        |
 | ----- | ------------------ |
