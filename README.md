@@ -35,7 +35,7 @@ Aera is currently in development. Version 0.1 will include:
 
 ## Documentation
 
-For complete language documentation, see the [`docs/spec/README.md`](docs/specification/) directory.
+For complete language documentation, see the [`docs/spec/README.md`](docs/spec/) directory.
 
 ## Getting Started
 
