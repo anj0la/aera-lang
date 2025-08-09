@@ -9,7 +9,7 @@ program = { declaration } EOF ;
 ## Declarations
 A program is a sequence of declarations, which are the statements that bind new identifiers or any of the statement types.
 
-```
+```ebnf
 declaration = function_declaration
             | variable_declaration
             | const_declaration
@@ -22,8 +22,8 @@ declaration = function_declaration
 ### Function Declaration
 The following rules define how a function is declared.
 
-```
-function_declaration =  { decorator } [visibility_modifier] [behaviour_modifier] "fn" identifier "(" [parameter_list] ")" ["->", type] block ;
+```ebnf
+function_declaration = { decorator } [visibility_modifier] [behaviour_modifier] "fn" identifier "(" [parameter_list] ")" ["->", type] block ;
 decorator = "@" identifier ;
 visibility_modifier = "pub" ;
 behaviour_modifier = "modifies" ;
@@ -34,7 +34,7 @@ parameter = identifier ":" type ;
 ### Variable Declaration
 The following rules define how variables and constants are declared.
 
-```
+```ebnf
 variable_declaration = "let" ["mut"] identifier [":" type] ["=" expression] ;
 const_declaration = "const" identifier [":" type] "=" expression ;
 ```
@@ -42,7 +42,7 @@ const_declaration = "const" identifier [":" type] "=" expression ;
 ### Type Declaration
 The following rules define how structs, classes and traits are declared.
 
-```
+```ebnf
 struct_declaration = "struct" identifier "{" { field_declaration } "}" ;
 field_declaration = identifier ":" type ["=" expression] ;
 
@@ -75,7 +75,7 @@ The following table showcases the operator precedence, along with its associativ
 | 12 | if … else … | Ternary operator | Left-to-right |
 | 13 (Lowest) | =, +=, -=, *=, /=, %=, <<=, >>=, &=, \|=, ^-, ~= | Assignment and compound assignment | Right-to-left |
 
-```
+```ebnf
 expression = assignment ;
 
 assignment = expression assignment_op assignment | conditional ;
@@ -94,8 +94,8 @@ term = factor { ("+" | "-") factor } ;
 factor = unary { ("*" | "/" | "%") unary } ;
 
 unary = ("!" | "-"| "~" | "&" ) unary | cast ;
-cast = postfix [ "as" type ] ; 
-postfix = primary { ("[" expression "]" | "." identifier | "(" [ argument_list ] ")"  | "?" | "??" ) } ;
+cast = postfix ["as" type] ; 
+postfix = primary { ("[" expression "]" | "." identifier | "(" [argument_list] ")"  | "?" | "??" ) } ;
 primary = literal | identifier | "(" expression ")" ;
 
 argument_list = expression { ","  expression } ;
@@ -103,7 +103,7 @@ argument_list = expression { ","  expression } ;
 
 ## Statements
 
-```
+```ebnf
 statement = variable_declaration
             | const_declaration
             | expression_statement
@@ -116,16 +116,16 @@ statement = variable_declaration
 
 expression_statement = expression ;
 return_statement = "return" [expression] ;
-if_statement = "if" expression statement [ "else" statement ] ;
-while_statement = "while" expression statement ";" ;
-for_statement = "for" identifier "in" expr [ ".." expr ] statement ; 
+if_statement = "if" expression statement ["else" statement] ;
+while_statement = "while" expression statement ;
+for_statement = "for" identifier "in" expr [".." expr] statement ; 
 loop_statement = "loop" statement ;
 block = "{" { statement } "}" ;
 ```
 
 ## Lexical Grammar
 
-```
+```ebnf
 literal = integer_literal
           | float_literal
           | character_literal
@@ -143,7 +143,7 @@ binary_integer = "0" ("b" | "B") binary_digit { binary_digit } ;
 octal_integer = "0" ("o" | "O") octal_digit { octal_digit } ;
 float_literal = decimal_integer "." decimal_integer [ scientific_notation ]
               | decimal_integer scientific_notation ;
-scientific_notation = ("e" | "E") [ "+" | "-" ] decimal_integer ;
+scientific_notation = ("e" | "E") ["+" | "-"] decimal_integer ;
 
 float_literal = integer_literal "." integer_literal ;
 character_literal = "'" character  "'" ";" ;
@@ -173,12 +173,13 @@ type = primitive_type
      | generic_type 
      | static_array_type ; 
 
-primitive_type =  "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; user_type = identifier ; 
+primitive_type =  "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
+user_type = identifier ; 
 dynamic_array_type = identifier !" "<" type ">" ; 
 map_type = identifier "!" "<" type "," type ">" ;
 generic_type = identifier !" "<" type_list ">" ; 
 static_array_type = type array_dimensions ;
 
-array_dimensions = ( "[" [ integer_literal ] "]" ) { ( "[" [ integer_literal ] "]" ) } ;
+array_dimensions = ( "[" [integer_literal] "]" ) { ( "[" [integer_literal] "]" ) } ;
 type_list = type { "," type } ;
 ```
