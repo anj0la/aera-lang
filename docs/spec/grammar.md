@@ -141,7 +141,7 @@ decimal_integer = digit { digit } ;
 hexadecimal_integer = "0" ("x" | "X") hex_digit { hex_digit } ;
 binary_integer = "0" ("b" | "B") binary_digit { binary_digit } ;
 octal_integer = "0" ("o" | "O") octal_digit { octal_digit } ;
-float_literal = decimal_integer "." decimal_integer [ scientific_notation ]
+float_literal = decimal_integer "." decimal_integer [scientific_notation]
               | decimal_integer scientific_notation ;
 scientific_notation = ("e" | "E") ["+" | "-"] decimal_integer ;
 
@@ -154,17 +154,15 @@ character = printable | escape_sequence ;
 printable = alpha | digit | symbol | space ;
 alpha = "a" ... "z" | "A" ... "Z" ;
 digit = "0" ... "9";
-hex_digit = digit | 
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 hex_digit = digit | "a" ... "f" | "A" ... "F" ;
 binary_digit = "0" | "1" ;
-octal_digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" ;
+octal_digit = "0" ... "7" ;
 symbol = "!" ... "/" | ":" ... "@" | "[" ... "`" | "{" ... "~" ;
 underscore = "_" ;
 escape_sequence = "\\" ( "n" | "t" | "r" | "\"" | "'" | "\\" ) ;
 space = " " ;
 
-identifier = (alpha  | "_" ) { (alpha | digit | "_" ) } ;
+identifier = (alpha | "_" ) { (alpha | digit | "_" ) } ;
 
 type = primitive_type 
      | user_type 
@@ -173,7 +171,7 @@ type = primitive_type
      | generic_type 
      | static_array_type ; 
 
-primitive_type =  "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
+primitive_type = "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
 user_type = identifier ; 
 dynamic_array_type = identifier !" "<" type ">" ; 
 map_type = identifier "!" "<" type "," type ">" ;
