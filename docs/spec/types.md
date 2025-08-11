@@ -49,6 +49,15 @@ Aera provides two kinds of arrays:
 A tuple is a fixed-size data structure that stores elements of different types (heterogeneous) in contiguous memory.
 Tuples are useful for returning multiple values from a function.
 
+### Map
+
+A `map!<K, V>` is a generic associative container that stores key-value pairs, where each key of type `K` is uniquely associated with a value of type `V`. It provides efficient lookup, insertion, and removal operations based on keys.
+
+- `K` represents the type of the keys.
+- `V` represents the type of the values.
+
+Maps are useful for storing and retrieving data by keys quickly and are implemented using a hash-based structure under the hood.
+
 ## Memory Management
 
 Aera provides three pointer types for managing memory safely without garbage collection: `ptr!<T>`, `ref!<T>` and `weak!<T>`.
@@ -170,6 +179,7 @@ fn process() -> res!<void, err> {
     return ok()
 }
 ```
+
 
 
 
