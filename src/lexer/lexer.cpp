@@ -66,8 +66,14 @@ namespace aera::lexer {
 				read_line_comment();
 				break;
 
-			// Add new line 
-			case '\n': add_token(TokenType::Newline, std::string(1, ch), ch); break;
+			// Handle new line
+			case '\n': 
+				if (paren_depth == 0 && brace_depth == 0 && bracket_depth == 0) {
+					if (can_end_statement(prev_token().type)) {
+						add_token(TokenType::Semicolon);
+					}
+				}
+				break;
 
 			// Ignore spaces and carriage return
 			case ' ':
@@ -113,6 +119,10 @@ namespace aera::lexer {
 		return source[index + 1];
 	}
 
+	Token Lexer::prev_token() {
+		return tokens[tokens.size() - 1];
+	}
+
 	bool Lexer::is_at_end() {
 		return index >= source.length();
 	}
@@ -153,12 +163,30 @@ namespace aera::lexer {
 
 	void Lexer::read_punctuation(char c) {
 		switch (c) {
-			case '(': add_token(TokenType::LeftParen); break;
-			case ')': add_token(TokenType::RightParen); break;
-			case '{': add_token(TokenType::LeftBrace); break;
-			case '}': add_token(TokenType::RightBrace); break;
-			case '[': add_token(TokenType::LeftBracket); break;
-			case ']': add_token(TokenType::RightBracket); break;
+			case '(': 
+				paren_depth++;
+				add_token(TokenType::LeftParen); 
+				break;
+			case ')': 
+				paren_depth--;
+				add_token(TokenType::RightParen); 
+				break;
+			case '{': 
+				brace_depth++;
+				add_token(TokenType::LeftBrace); 
+				break;
+			case '}': 
+				brace_depth--;
+				add_token(TokenType::RightBrace); 
+				break;
+			case '[': 
+				bracket_depth++;
+				add_token(TokenType::LeftBracket); 
+				break;
+			case ']': 
+				bracket_depth--;
+				add_token(TokenType::RightBracket); 
+				break;
 			case ',': add_token(TokenType::Comma); break;
 			case ';': add_token(TokenType::Semicolon); break;
 			case ':': add_token(TokenType::Colon); break;
@@ -564,6 +592,27 @@ namespace aera::lexer {
 		}
 
 		add_token(type);
+	}
+
+	bool can_end_statement(TokenType type) {
+		switch (type) {
+			case TokenType::Identifier:
+			case TokenType::IntLiteral:
+			case TokenType::FloatLiteral:
+			case TokenType::CharacterLiteral:
+			case TokenType::StringLiteral:
+			case TokenType::True:
+			case TokenType::False:
+			case TokenType::Break:
+			case TokenType::Continue:
+			case TokenType::Return:
+			case TokenType::RightParen:
+			case TokenType::RightBrace:
+			case TokenType::RightBracket:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	bool Lexer::is_digit(char c) const {

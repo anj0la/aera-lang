@@ -28,6 +28,9 @@ namespace aera::lexer {
 		int line = 1;
 		int start_col = 1;
 		int col = 1;
+		int paren_depth = 0;
+		int brace_depth = 0;
+		int bracket_depth = 0;
 
 		SourceLocation current_location() const;
 		SourceLocation start_location() const;
@@ -36,6 +39,7 @@ namespace aera::lexer {
 		void read_token();
 		char peek();
 		char peek_next();
+		Token prev_token();
 		bool is_at_end();
 		int current_line() const;
 		int current_column() const;
@@ -57,7 +61,8 @@ namespace aera::lexer {
 		void read_decimal_number();
 		bool is_valid_fractional_part();
 		void read_identifier();
-		
+
+		bool can_end_statement(TokenType type);
 		bool is_digit(char c) const;
 		bool is_hex_digit(char c) const;
 		bool is_binary_digit(char c) const;
