@@ -655,7 +655,7 @@ namespace aera::lexer {
 	}
 
 	void Lexer::error(const std::string& msg, const std::string& note) {
-		reporter_.add_error(source_context_.filename(), get_token_length(), start_location(), msg, source_context_.get_line(line), note);
+		reporter_.add_error(source_context_.filename(), get_token_length(), start_location(), msg, std::string(source_context_.get_line(line)), note);
 		add_token(TokenType::Illegal);
 	}
 }

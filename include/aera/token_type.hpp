@@ -83,8 +83,7 @@ namespace aera {
 
 		Fn, Let, Mut, Const, Pub,
 		If, Else, For, While, Loop, Match, Break, Continue, Return, In, 
-		Import, Class, Struct, Enum, Trait, With, Modifies, Alias, Self, As, Bind,
-        True, False, None,
+		Import, Class, Struct, Enum, Trait, With, Modifies, Alias, Self, As, Bind, None,
 
 		Illegal, Eof
 	};

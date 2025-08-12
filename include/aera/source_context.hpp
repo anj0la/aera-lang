@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <string_view>
+#include <stdexcept>
 
 namespace aera {
     class SourceContext {
@@ -23,6 +24,9 @@ namespace aera {
         }
 
         std::string_view get_line(size_t line) const {
+            if (line >= line_spans_.size()) {
+                throw std::out_of_range("Line index out of range");
+            }
             auto [start, length] = line_spans_[line];
             return std::string_view(source_).substr(start, length);
         }
@@ -34,7 +38,5 @@ namespace aera {
         std::string source_;
         std::string filename_;
         std::vector<LineSpan> line_spans_;
-
-    
     };
 }
