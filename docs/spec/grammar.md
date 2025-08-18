@@ -2,6 +2,17 @@
 
 Aera's grammar is used to parse the sequence of tokens into the abstract syntax tree. It starts off with the first rule which matches an entire Aera program.
 
+## Table of Contents
+
+- [Declarations](#declarations)
+  - [Function Declaration](#function-declaration)
+  - [Variable Declaration](#variable-declaration)
+  - [Type Declaration](#type-declaration)
+- [Expressions](#expressions)
+  - [Precedence and Associativity](#precedence-and-associativity)
+- [Statements](#statements)
+- [Lexical Grammar](#lexical-grammar)
+
 ```ebnf
 program = { declaration } EOF ;
 ```
