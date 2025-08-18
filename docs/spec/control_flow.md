@@ -2,6 +2,17 @@
 
 Aera supports familiar control flow structures from C++, such as `if` and `while`, while enhancing others like `for` and `match` (an improved switch statement).
 
+## Table of Contents
+
+- [if statement](#if-statement)
+- [while statement](#while-statement)
+- [for statement](#for-statement)
+- [loop statement](#loop-statement)
+- [match statement](#match-statement)
+- [break](#break)
+- [continue](#continue)
+- [return](#return)
+
 ## if statement
 
 Aera's `if` statement structure is similar to C++, where the condition after the keyword `if` and before the left brace `{` must evaluate to a bool. If it is true, then the code in 
