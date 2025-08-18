@@ -112,6 +112,8 @@ statement = variable_declaration
             | while_statement
             | for_statement
             | loop_statement
+            | break_statement
+            | continue_statement
             | block ;
 
 expression_statement = expression ;
@@ -120,6 +122,8 @@ if_statement = "if" expression statement ["else" statement] ;
 while_statement = "while" expression statement ;
 for_statement = "for" identifier "in" expr [".." expr] statement ; 
 loop_statement = "loop" statement ;
+break_statement = "break" ;
+continue_statement = "continue" ;
 block = "{" { statement } "}" ;
 ```
 
