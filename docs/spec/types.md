@@ -1,6 +1,28 @@
 # Types
 Aera’s type system is designed to be expressive, safe, and easy to understand. The available types fall into four categories: primitive, compound, memory management, and error handling types.
 
+## Table of Contents
+
+- [Primitive Types](#primitive-types)
+  - [Integer](#integer)
+  - [Floating Point](#floating-point)
+  - [Boolean](#boolean)
+  - [Character](#character)
+  - [String](#string)
+- [Compound Types](#compound-types)
+  - [Array](#array)
+  - [Tuple](#tuple)
+  - [Map](#map)
+- [Memory Management](#memory-management)
+  - [Owned Pointer](#owned-pointer)
+  - [Shared Reference](#shared-reference)
+  - [Weak Reference](#weak-reference)
+  - [Raw Pointer](#raw-pointer)
+- [Error Handling](#error-handling)
+  - [Optional Type](#optional-type)
+  - [Result Type](#result-type)
+  - [Operators](#operators)
+
 ## Primitive Types
 
 ### Integer
