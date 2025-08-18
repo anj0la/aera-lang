@@ -5,9 +5,10 @@ expressive programming language designed for interactive applications.
 
 ## Table of Contents
 
-- [Overview](./Overview.md)
-- [Lexical Structure](./Lexical.md)
-- [Variables](./Variables.md)
+- [Overview](./overview.md)
+- [Lexical Structure](./lexical.md)
+- [Variables](./variables.md)
 - [Control Flow](./control_flow.md)
-- [Types](./Types.md)
-- [Grammar](./Grammar.md)
+- [Types](./types.md)
+- [Grammar](./grammar.md)
+
