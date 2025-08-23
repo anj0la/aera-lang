@@ -183,54 +183,32 @@ match result {
 
 ### Operators
 
-Aera provides three convenient operators for working with errors: `?`,  `??` and `!!`.
+Aera provides two convenient operators for working with optionals and errors: `?` and  `??`.
 
-The `?` operator is used to unwrap optional values. When applied to an expression that may be `some` or `none`, it unwraps the contained value if present, or returns `none` immediately from the current function if the value is absent.
+The `?` operator is used to unwrap both optional and error values. When applied to an optional (`opt!<T>`), it unwraps the contained value if present, or returns `none` immediately from the current function if the value is absent. When applied to a result (`res!<T, E>`), it attempts to unwrap the `ok` value, or returns the error immediately from the current function if the result contains an `err`.
 
 ```aera
 fn get_length(s: opt!<string>) -> opt!<int> {
-    let str = s? # unwrap option, else return none from get_length
+    let str = s?  # unwrap option, else return none from get_length
     return str.length()
 }
 
-fn main() {
-    let maybe_name: opt!<string> = some("Julia")
-    let length = get_length(maybe_name)?  # unwrapping option here as well
-    println(length)
-}
-```
-
-The `??` operator is used to unwrap error values. It attempts to unwrap the `ok` value from a result. If the result contains an `err`, `??` returns the error immediately from the current function, propagating the failure without requiring explicit error handling.
-
-```aera
 fn read_file(path: string) -> res!<string, err> {
-    let content = open_file(path)??  # unwrap ok or return err early
+    let content = open_file(path)?  # unwrap ok or return err early
     return ok(content)
 }
-
-fn process() -> res!<void, err> {
-    let data = read_file("data.txt")??  # propagate err early if any
-    println(data)
-    return ok()
-}
 ```
 
-The `!!` operator is used to provide a fallback value for both optional and result types. When applied to an expression that may be none (for opt!) or err (for res!), it unwraps the contained value if present, or returns the specified fallback value instead. This allows you to handle missing or failing values concisely without propagating them further.
+The `??` operator is used to provide a fallback value for both optional and result types. When applied to an expression that may be none (for `opt!<T>`) or err (for `res!<T, E>`), it unwraps the contained value if present, or returns the specified fallback value instead. This allows you to handle missing or failing values concisely without propagating them further.
 
 ```aera
-# Using !! with an optional
-let maybe_name: opt!<string> = none
-let display_name = maybe_name !! "Guest" # use "Guest" if maybe_name is none
-println(display_name)
-
-# Using !! with a result
-fn load_logo(path: string) -> res!<Image, err> { 
-    return err("file not found") # assume this might fail
+fn get_name_or_default(maybe_name: opt!<string>) -> string {
+    return maybe_name ?? "Anonymous" # use "Anonymous" if none
 }
 
-let logo = load_logo("logo.png") !! placeholder_image # use placeholder_image if load fails
-render(logo)
-
+fn safe_divide(a: int, b: int) -> int {
+    return divide(a, b) ?? 0 # use 0 if division returns an error
+}
 ```
 
 
