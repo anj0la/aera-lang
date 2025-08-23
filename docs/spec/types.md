@@ -183,7 +183,7 @@ match result {
 
 ### Operators
 
-Aera provides two convenient operators for working with errors: `?` and `??`.
+Aera provides three convenient operators for working with errors: `?`,  `??` and `!!`.
 
 The `?` operator is used to unwrap optional values. When applied to an expression that may be `some` or `none`, it unwraps the contained value if present, or returns `none` immediately from the current function if the value is absent.
 
