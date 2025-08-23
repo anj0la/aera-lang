@@ -38,20 +38,6 @@ protected:
     }
 };
 
-TEST_F(DiagnosticReporterTest, DebugCapture) {
-    // Test 1: Direct cout
-    std::cout << "Direct cout test" << std::endl;
-    std::string output1 = capture.get_output();
-    std::cout << "Captured direct: length=" << output1.length() << ", content='" << output1 << "'" << std::endl;
-
-    capture.clear();
-
-    // Test 2: After clear
-    std::cout << "After clear test" << std::endl;
-    std::string output2 = capture.get_output();
-    std::cout << "Captured after clear: length=" << output2.length() << ", content='" << output2 << "'" << std::endl;
-}
-
 // State Tracking Tests
 
 TEST_F(DiagnosticReporterTest, InitialStateIsEmpty) {
