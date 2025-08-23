@@ -1,6 +1,28 @@
 # Types
 Aera’s type system is designed to be expressive, safe, and easy to understand. The available types fall into four categories: primitive, compound, memory management, and error handling types.
 
+## Table of Contents
+
+- [Primitive Types](#primitive-types)
+  - [Integer](#integer)
+  - [Floating Point](#floating-point)
+  - [Boolean](#boolean)
+  - [Character](#character)
+  - [String](#string)
+- [Compound Types](#compound-types)
+  - [Array](#array)
+  - [Tuple](#tuple)
+  - [Map](#map)
+- [Memory Management](#memory-management)
+  - [Owned Pointer](#owned-pointer)
+  - [Shared Reference](#shared-reference)
+  - [Weak Reference](#weak-reference)
+  - [Raw Pointer](#raw-pointer)
+- [Error Handling](#error-handling)
+  - [Optional Type](#optional-type)
+  - [Result Type](#result-type)
+  - [Operators](#operators)
+
 ## Primitive Types
 
 ### Integer
@@ -28,11 +50,11 @@ A `bool` is an integer type that can be either `true` or `false`, occupying 1 by
 
 ### Character
 
-A `char` is an integer type that stores a single character and occupies 1 byte of memory. Characters are enclosed in single quotation marks.
+A `char` is an integer type that stores a single character and occupies 1 byte of memory. Characters are enclosed in single quotation marks ('').
 
 ### String
 
-A `string` is an ** sequence** of characters, enclosed in double quotation marks.
+A `string` is a **sequence** of characters, enclosed in double quotation marks ("").
 
 ## Compound Types
 
@@ -42,12 +64,21 @@ An array is a fixed-size data structure that stores elements of the same type (h
 
 Aera provides two kinds of arrays:
 - Static arrays → Declared by specifying the element type. The size is **fixed** at declaration; elements can change, but the length cannot.
-- Dynamic arrays → Declared using the **arr!<T>** container. They support adding and removing elements at runtime. Unless the array size is known in advance, dynamic arrays are **preferred**.
+- Dynamic arrays → Declared using the `arr!<T>` container. They support adding and removing elements at runtime. Unless the array size is known in advance, dynamic arrays are **preferred**.
+
+```aera
+let whole_numbers: int32[10] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+let arr: arr!<float64> = [1.0, 2.0, 4.0, 8.0]
+```
 
 ### Tuple
 
 A tuple is a fixed-size data structure that stores elements of different types (heterogeneous) in contiguous memory.
 Tuples are useful for returning multiple values from a function.
+
+```aera
+let tuple: (string, bool) = ("hello world", true)
+```
 
 ### Map
 
@@ -58,11 +89,15 @@ A `map!<K, V>` is a generic associative container that stores key-value pairs, w
 
 Maps are useful for storing and retrieving data by keys quickly and are implemented using a hash-based structure under the hood.
 
+```aera
+let mut map: map!<str, int32> = {"apple": 0, "banana": 1, "orange": 2 }
+```
+
 ## Memory Management
 
 Aera provides three pointer types for managing memory safely without garbage collection: `ptr!<T>`, `ref!<T>` and `weak!<T>`.
 
-### `ptr!<T>` - Owned Pointer
+### Owned Pointer
 
 An owned pointer provides exclusive ownership of heap-allocated memory. It automatically deallocates memory when the pointer goes out of scope. It works similarly to std::unique_ptr<T> in C++.
 
@@ -77,7 +112,7 @@ let a = ptr!<MyStruct>(...)  # a owns the value
 let b = a.move() # transfers ownership to b
 ```
 
-### `ref!<T>` - Shared Reference
+### Shared Reference
 
 A shared reference allows multiple owners of the same memory location through reference counting. The memory is deallocated when the last reference is dropped. It works similarly to std::shared_ptr<T> in C++.
 
@@ -86,7 +121,7 @@ let a = ref!<MyStruct>(...) # shared ownership
 let b = a.clone() # ref count increases (copy)
 ```
 
-### `weak!<T>` - Weak Reference
+### Weak Reference
 
 A weak reference holds a non-owning reference to memory managed by ref!<T>. It does not affect the reference count and can detect when the referenced object has been deallocated.
 
@@ -96,7 +131,7 @@ let w = a.downgrade() # where a is a ref!<T>
 let u = w.upgrade() # attempts to get strong ref
 ```
 
-### `*T` - Raw Pointer
+### Raw Pointer
 
 Raw pointers (`*T`) are not available in the safe domain. They are only accessible via a special function T* to_raw(...) inside bind blocks.
 
@@ -115,7 +150,7 @@ This ensures that all pointer-based memory access in safe code is mediated by sm
 
 Aera provides two types for error handling: `opt!<T>` and `res!<T>`.
 
-### `opt!<T>` – Optional Type
+### Optional Type
 
 An optional type explicitly represents values that might not exist. This is the only way to represent "null" or missing values in Aera, making null pointer errors impossible for managed types.
 ```aera
@@ -127,7 +162,7 @@ match maybe_value {
 }
 ```
 
-### `res!<T, E>` – Result Type
+### Result Type
 
 A result type represents operations that can either succeed with a value of type T or fail with an error of type E. This makes error handling explicit and prevents forgotten error checks.
 ```aera
@@ -148,7 +183,7 @@ match result {
 
 ### Operators
 
-Aera provides two convenient operators for working with errors: `?` and `??`.
+Aera provides three convenient operators for working with errors: `?`,  `??` and `!!`.
 
 The `?` operator is used to unwrap optional values. When applied to an expression that may be `some` or `none`, it unwraps the contained value if present, or returns `none` immediately from the current function if the value is absent.
 
@@ -170,14 +205,32 @@ The `??` operator is used to unwrap error values. It attempts to unwrap the `ok`
 ```aera
 fn read_file(path: string) -> res!<string, err> {
     let content = open_file(path)??  # unwrap ok or return err early
-    return content
+    return ok(content)
 }
 
 fn process() -> res!<void, err> {
-    let data = read_ile("data.txt")??  # propagate err early if any
-    print(data)
+    let data = read_file("data.txt")??  # propagate err early if any
+    println(data)
     return ok()
 }
+```
+
+The `!!` operator is used to provide a fallback value for both optional and result types. When applied to an expression that may be none (for opt!) or err (for res!), it unwraps the contained value if present, or returns the specified fallback value instead. This allows you to handle missing or failing values concisely without propagating them further.
+
+```aera
+# Using !! with an optional
+let maybe_name: opt!<string> = none
+let display_name = maybe_name !! "Guest" # use "Guest" if maybe_name is none
+println(display_name)
+
+# Using !! with a result
+fn load_logo(path: string) -> res!<Image, err> { 
+    return err("file not found") # assume this might fail
+}
+
+let logo = load_logo("logo.png") !! placeholder_image # use placeholder_image if load fails
+render(logo)
+
 ```
 
 
