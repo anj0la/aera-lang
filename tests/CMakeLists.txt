@@ -39,6 +39,7 @@ endif()
 
 add_executable(aera_top_level_tests
 	  "test_source_context.cpp"
+      "test_diagnostics.cpp"
 )
 
 target_link_libraries(

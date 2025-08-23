@@ -1,12 +1,7 @@
-﻿// aera.cpp : Defines the entry point for the application.
-//
+﻿#include <iostream>
+#include <aera/diagnostics.hpp>
+#include <aera/source_location.hpp>
 
-#include "aera.h"
-
-using namespace std;
-
-int main()
-{
-	cout << "Hello CMake." << endl;
-	return 0;
+int main() {
+    return 0;
 }

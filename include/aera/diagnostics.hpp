@@ -10,8 +10,8 @@ namespace aera {
     struct Diagnostic {
         enum class Severity { Error, Warning, Note };
         Severity severity;
-        int token_length;
         std::string filepath;
+        int token_length;
         SourceLocation loc;      // line and column
         std::string message;     // the message
         std::string source_line; // the source line (can be empty)
