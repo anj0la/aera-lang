@@ -138,13 +138,13 @@ The `return` statement exits a function and optionally returns a value.
 
 ```aera
 for i in 0..10 {
+
     if cond {
       return true
     }
 }
 
 return false
-
 ```
 
 
