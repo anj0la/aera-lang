@@ -2,8 +2,24 @@
 
 #include <cstdint>
 #include <variant>
+#include <vector>
+#include <string>
+#include <memory>
 
 namespace aera {
+
+    // Forward Declarations
+
+    struct Type;
+    struct PrimitiveType;
+    struct UserType;
+    struct GenericType;
+    struct DynamicArrayType;
+    struct MapType;
+    struct SetType;
+    struct StaticArrayType;
+
+    // Types
 
     struct Type {
         virtual ~Type() = default;
@@ -24,13 +40,25 @@ namespace aera {
         std::string name;
     };
 
-    struct GenericType : public Type {
-        std::string name;
+    struct GenericType : public UserType {
         std::vector<std::unique_ptr<Type>> type_arguments;
     };
 
-    struct ArrayType : public Type {
+    struct DynamicArrayType : public Type {
         std::unique_ptr<Type> element_type;
-        std::vector<int> dimensions; // -1 for unsized dimensions like []
+    };
+
+    struct MapType : public Type {
+        std::unique_ptr<Type> key_type;
+        std::unique_ptr<Type> value_type;
+    };
+
+    struct SetType : public Type {
+        std::unique_ptr<Type> element_type;
+    };
+
+    struct StaticArrayType : public Type {
+        std::unique_ptr<Type> element_type;
+        std::vector<int> dimensions;
     };
 }
