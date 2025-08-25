@@ -21,10 +21,9 @@ namespace aera {
         Period,                     // .
 		Semicolon,                  // ;
         Colon,                      // ;
+        Grave,                      // `
+        Newline,                    // \n
 
-        // New line
-        Newline,
-		
         // Operators (from longest to shortest)
 
         LessLessEqual,              // <<=
@@ -53,6 +52,7 @@ namespace aera {
         MinusGreater,               // ->
         PeriodPeriod,               // ..
         EqualGreater,               // =>
+        QuestionQuestion,           // ??
 
         Amp,                        // &
         Pipe,                       // |
@@ -83,7 +83,9 @@ namespace aera {
 
 		Fn, Let, Mut, Const, Pub,
 		If, Else, For, While, Loop, Match, Break, Continue, Return, In, 
-		Import, Class, Struct, Enum, Trait, With, Modifies, Alias, Self, As, Bind, None,
+		Import, Class, Struct, Enum, Trait, With, Modifies, Alias, Self, As, Bind,
+
+        // Errors
 
 		Illegal, Eof
 	};
@@ -116,7 +118,6 @@ namespace aera {
         {"in", TokenType::In},
         {"true", TokenType::True},
         {"false", TokenType::False},
-        {"none", TokenType::None},
         {"bind", TokenType::Bind}
     };
 

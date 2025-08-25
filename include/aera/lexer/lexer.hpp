@@ -11,8 +11,8 @@ namespace aera::lexer {
 
 	class Lexer {
 	public:
-		Lexer(const SourceContext& source_context, DiagnosticReporter& reporter, const std::string& source) :
-		source_context_(source_context), reporter_(reporter), source(source) {}
+		Lexer(const SourceContext& source_context, DiagnosticReporter& reporter) :
+		source_context_(source_context), reporter_(reporter) {}
 
 		~Lexer() = default;
 
@@ -54,7 +54,7 @@ namespace aera::lexer {
 		void read_block_comment();
 		void read_character();
 		void read_string();
-		void read_number();
+		void read_number(char c);
 		void read_hexademical_number();
 		void read_binary_number();
 		void read_octal_number();
@@ -62,7 +62,6 @@ namespace aera::lexer {
 		bool is_valid_fractional_part();
 		void read_identifier();
 
-		bool can_end_statement(TokenType type);
 		bool is_digit(char c) const;
 		bool is_hex_digit(char c) const;
 		bool is_binary_digit(char c) const;

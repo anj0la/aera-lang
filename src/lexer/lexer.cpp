@@ -25,7 +25,7 @@ namespace aera::lexer {
 	}
 
 	char Lexer::advance() {
-		char ch = source[index];
+		char ch = source_context_.source()[index];
 
 		switch (ch) {
 			case '\n':
@@ -52,7 +52,7 @@ namespace aera::lexer {
 		
 		switch (ch) {
 			// Punctuation
-			case '(': case ')': case '{': case '}':
+		case '(': case ')': case '{': case '}': case '[': case ']':
 			case ',': case ';': case ':': read_punctuation(ch); break;
 
 			// Operators
@@ -68,11 +68,7 @@ namespace aera::lexer {
 
 			// Handle new line
 			case '\n': 
-				if (paren_depth == 0 && brace_depth == 0 && bracket_depth == 0) {
-					if (can_end_statement(prev_token().type)) {
-						add_token(TokenType::Semicolon);
-					}
-				}
+				tokens.push_back(Token(TokenType::Newline, "\n", current_location(), '\n')); // use current_location() as col == 1
 				break;
 
 			// Ignore spaces and carriage return
@@ -90,13 +86,13 @@ namespace aera::lexer {
 			// Number literals (int, float) and identifiers
 			default: 
 				if (is_digit(ch)) {
-					read_number(); 
+					read_number(ch); 
 				}
 				else if (is_alpha(ch)) {
 					read_identifier();
 				}
 				else {
-					std::string msg = "unexpected character '" + std::string(1, ch); +"'";
+					std::string msg = "unexpected character '" + std::string(1, ch) + "'";
 					error(msg, "this character is not supported in the language");
 				}
 				break;
@@ -108,15 +104,15 @@ namespace aera::lexer {
 			return '\0';
 		}
 
-		return source[index];
+		return source_context_.source()[index];
 	}
 
 	char Lexer::peek_next() {
-		if (index + 1 >= source.length()) {
+		if (index + 1 >= source_context_.source().length()) {
 			return '\0';
 		}
 
-		return source[index + 1];
+		return source_context_.source()[index + 1];
 	}
 
 	Token Lexer::prev_token() {
@@ -124,7 +120,7 @@ namespace aera::lexer {
 	}
 
 	bool Lexer::is_at_end() {
-		return index >= source.length();
+		return index >= source_context_.source().length();
 	}
 
 	int Lexer::current_line() const {
@@ -136,7 +132,7 @@ namespace aera::lexer {
 	}
 
 	int Lexer::get_token_length() const {
-		return source.substr(start, index - start).length();
+		return source_context_.source().substr(start, index - start).length();
 	}
 
 	void Lexer::add_token(TokenType type, const std::string& lexeme, const Value& literal) {
@@ -144,7 +140,7 @@ namespace aera::lexer {
 	}
 
 	void Lexer::add_token(TokenType type) {
-		std::string lexeme = source.substr(start, index - start);
+		std::string lexeme = source_context_.source().substr(start, index - start);
 		tokens.push_back(Token(type, lexeme, start_location(), lexeme));
 	}
 
@@ -153,11 +149,11 @@ namespace aera::lexer {
 			return false;
 		}
 
-		if (source[index] != expected) {
+		if (source_context_.source()[index] != expected) {
 			return false;
 		}
 
-		advance(); // to handle line and col
+		advance(); // handles line and col
 		return true;
 	}
 
@@ -190,45 +186,44 @@ namespace aera::lexer {
 			case ',': add_token(TokenType::Comma); break;
 			case ';': add_token(TokenType::Semicolon); break;
 			case ':': add_token(TokenType::Colon); break;
+			case '`': add_token(TokenType::Grave); break;
 		}
 	}
 
 	void Lexer::read_operator(char c) {
 		switch (c) {
 			// Longest tokens (length <= 3)
-
 			case '.':
-				if (match('.')) { // Handles ..= and .. tokens
+				if (match('.')) { // handles ..= and .. tokens
 					add_token((match('=') ? TokenType::PeriodPeriodEqual : TokenType::PeriodPeriod));
 				}
-				else { // Handles . token
+				else { // handles . token
 					add_token(TokenType::Period);
 				}
 				break;
 
 			case '<':
-				if (match('<')) { // Handle <<= and << tokens
+				if (match('<')) { // handle <<= and << tokens
 					add_token((match('=') ? TokenType::LessLessEqual : TokenType::LessLess));
 				}
-				else if (match('#')) { // Block comments start with <#
+				else if (match('#')) { // block comments start with <#
 					read_block_comment();
 				}
-				else { // Handle < and <= tokens
+				else { // handle < and <= tokens
 					add_token((match('=') ? TokenType::LessEqual : TokenType::Less));
 				}
 				break;
 
 			case '>':
-				if (match('>')) { // Handle >>= and >> tokens
+				if (match('>')) { // handle >>= and >> tokens
 					add_token((match('>') ? TokenType::GreaterGreaterEqual : TokenType::GreaterGreater));
 				}
-				else { // Handle > and >= tokens
+				else { // handle > and >= tokens
 					add_token((match('=') ? TokenType::GreaterEqual : TokenType::Greater));
 				}
 				break;
 
 			// Multi-tokens (len <= 2)
-
 			case '+':
 				if (match('+')) {
 					add_token(TokenType::PlusPlus);
@@ -271,19 +266,19 @@ namespace aera::lexer {
 				break;
 			
 			case '&':
-				if (match('&')) { // Handles logical and (&&) token
+				if (match('&')) { // handles logical and (&&) token
 					add_token(TokenType::AmpAmp);  
 				}
-				else { // Handles bitwise and tokens
+				else { // handles bitwise and tokens
 					add_token((match('=') ? TokenType::AmpEqual : TokenType::Amp));
 				}
 				break;
 
 			case '|': 
-				if (match('|')) { // Handles logical or (||) token
+				if (match('|')) { // handles logical or (||) token
 					add_token(TokenType::PipePipe);
 				}
-				else { // Handles bitwise or tokens
+				else { // handles bitwise or tokens
 					add_token((match('=') ? TokenType::PipeEqual : TokenType::Pipe));
 				}
 				break;
@@ -295,13 +290,14 @@ namespace aera::lexer {
 			case '~':
 				add_token((match('=') ? TokenType::TildeEqual : TokenType::Tilde));
 				break;
+
+			case '?': 
+				add_token((match('?') ? TokenType::QuestionQuestion : TokenType::Question));
+				break;
 			
 			// Simple operators (len == 1)
-
-			case '?': add_token(TokenType::Question); break;
 			case '@': add_token(TokenType::At); break;
 		}
-
 	}
 
 	void Lexer::read_line_comment() {
@@ -367,8 +363,7 @@ namespace aera::lexer {
 			if (is_at_end()) {
 				error("unterminated character literal");
 			}
-			else { // Consume until the next quote to help parser recover
-				error("character literal must contain only one character");
+			else { // consume until the next quote to help parser recover
 				while (!is_at_end() && peek() != '\'') {
 					advance();
 				}
@@ -376,7 +371,8 @@ namespace aera::lexer {
 					advance(); // consume the found closing quote
 				}
 			}
-			return; // handled errors, return
+			error("character literal must contain only one character");
+			return;
 		}
 
 		advance(); // consume closing '
@@ -403,8 +399,6 @@ namespace aera::lexer {
 					case '\'': buf += '\''; break;
 					case '"': buf += '"'; break;
 					default:
-						std::string msg = "invalid escape sequence: \\" + std::string(1, escaped);
-						error(msg);
 						// Consume until the next quote to help parser recover
 						while (peek() != '"' && !is_at_end()) {
 							advance();
@@ -412,6 +406,8 @@ namespace aera::lexer {
 						if (!is_at_end()) {
 							advance(); // consume closing "
 						}
+						std::string msg = "invalid escape sequence: \\" + std::string(1, escaped);
+						error(msg);
 						return;
 				}
 			}
@@ -428,15 +424,15 @@ namespace aera::lexer {
 		add_token(TokenType::StringLiteral, buf, buf);
 	}
 
-	void Lexer::read_number() {
-		if (peek() == '0') {
-			if (peek_next() == 'x' || peek_next() == 'X') {
+	void Lexer::read_number(char c) {
+		if (c == '0') {
+			if (peek() == 'x' || peek() == 'X') {
 				read_hexademical_number();
 			}
-			else if (peek_next() == 'b' || peek_next() == 'B') {
+			else if (peek() == 'b' || peek() == 'B') {
 				read_binary_number();
 			}
-			else if (peek_next() == 'o' || peek_next() == 'O') {
+			else if (peek() == 'o' || peek() == 'O') {
 				read_octal_number();
 			}
 			else {
@@ -449,7 +445,6 @@ namespace aera::lexer {
 	}
 
 	void Lexer::read_hexademical_number() {
- 		advance(); // consume '0'
 		advance(); // consume 'x'
 
 		if (!is_hex_digit(peek())) {
@@ -466,12 +461,12 @@ namespace aera::lexer {
 			return;
 		}
 
-		std::string num_lexeme = source.substr(start, (index - start));
+		std::string num_lexeme = source_context_.source().substr(start, (index - start));
 		add_token(TokenType::IntLiteral, num_lexeme, static_cast<int64_t>(std::stoll(num_lexeme, nullptr, 0))); // value as int64 (long long)
 	}
 
 	void Lexer::read_binary_number() {
-		advance(); // consume '0'
+		std::string binary_digits;
 		advance(); // consume 'b'
 
 		if (!is_binary_digit(peek())) {
@@ -480,7 +475,7 @@ namespace aera::lexer {
 		}
 
 		while (is_binary_digit(peek())) {
-			advance();
+			binary_digits += advance();
 		}
 
 		if (peek() == '.') {
@@ -488,12 +483,12 @@ namespace aera::lexer {
 			return;
 		}
 
-		std::string num_lexeme = source.substr(start, (index - start));
-		add_token(TokenType::IntLiteral, num_lexeme, static_cast<int64_t>(std::stoll(num_lexeme, nullptr, 0))); // value as int64 (long long)
+		std::string num_lexeme = source_context_.source().substr(start, (index - start));
+		add_token(TokenType::IntLiteral, num_lexeme, static_cast<int64_t>(std::stoll(binary_digits, nullptr, 2))); // value as int64 (long long)
 	}
 
 	void Lexer::read_octal_number() {
-		advance(); // consume '0'
+		std::string octal_digits;
 		advance(); // consume 'o'
 
 		if (!is_octal_digit(peek())) {
@@ -502,7 +497,7 @@ namespace aera::lexer {
 		}
 
 		while (is_octal_digit(peek())) {
-			advance();
+			octal_digits += advance();
 		}
 
 		if (peek() == '.') {
@@ -510,8 +505,8 @@ namespace aera::lexer {
 			return;
 		}
 
-		std::string num_lexeme = source.substr(start, (index - start));
-		add_token(TokenType::IntLiteral, num_lexeme, static_cast<int64_t>(std::stoll(num_lexeme, nullptr, 0))); // value as int64 (long long)
+		std::string num_lexeme = source_context_.source().substr(start, (index - start));
+		add_token(TokenType::IntLiteral, num_lexeme, static_cast<int64_t>(std::stoll(octal_digits, nullptr, 8))); // value as int64 (long long)
 	}
 
 	void Lexer::read_decimal_number() {
@@ -520,8 +515,14 @@ namespace aera::lexer {
 		while (is_digit(peek())) { // integer part
 			advance();
 		}
-		
-		if (peek() == '.' && !is_alpha(peek_next())) { // fractional part
+
+		if (peek() == '.' && peek_next() == '.') { // range operator (integer part)
+			std::string num_lexeme = source_context_.source().substr(start, (index - start));
+			add_token(TokenType::IntLiteral, num_lexeme, static_cast<int64_t>(std::stoll(num_lexeme)));
+			return; // main loop handles .. / ..=
+		}
+
+		if (peek() == '.') { // fractional part
 			is_float = true;
 			advance(); // consume '.'
 
@@ -546,7 +547,7 @@ namespace aera::lexer {
 		}
 
 		if (is_valid_fractional_part()) { // an empty fractional part is still valid
-			std::string num_lexeme = source.substr(start, (index - start));
+			std::string num_lexeme = source_context_.source().substr(start, (index - start));
 			if (is_float) {
 				add_token(TokenType::FloatLiteral, num_lexeme, std::stod(num_lexeme)); // value as float64 (double)
 			}
@@ -561,13 +562,13 @@ namespace aera::lexer {
 			if (peek_next() == '.') { 
 				advance();
 				advance();
-				std::string msg = "range operator cannot follow a float literal: " + source.substr(start, index - start);
+				std::string msg = "range operator cannot follow a float literal: " + source_context_.source().substr(start, index - start);
 				error(msg);
 				return false;
 			}
 			else {
 				advance();
-				std::string msg = "malformed float literal: " + source.substr(start, index - start);
+				std::string msg = "malformed float literal: " + source_context_.source().substr(start, index - start);
 				error(msg);
 				return false;
 			}
@@ -580,7 +581,7 @@ namespace aera::lexer {
 			advance();
 		}
 
-		std::string lexeme = source.substr(start, index - start);
+		std::string lexeme = source_context_.source().substr(start, index - start);
 		TokenType type;
 		auto it = keywords.find(lexeme);
 
@@ -591,27 +592,15 @@ namespace aera::lexer {
 			type = TokenType::Identifier;
 		}
 
-		add_token(type);
-	}
-
-	bool can_end_statement(TokenType type) {
-		switch (type) {
-			case TokenType::Identifier:
-			case TokenType::IntLiteral:
-			case TokenType::FloatLiteral:
-			case TokenType::CharacterLiteral:
-			case TokenType::StringLiteral:
-			case TokenType::True:
-			case TokenType::False:
-			case TokenType::Break:
-			case TokenType::Continue:
-			case TokenType::Return:
-			case TokenType::RightParen:
-			case TokenType::RightBrace:
-			case TokenType::RightBracket:
-				return true;
-			default:
-				return false;
+		// Handle special boolean types -> convert to actual values otherwise the value of reserved words is just the lexeme
+		if (type == TokenType::True) {
+			add_token(type, "true", true);
+		}
+		else if (type == TokenType::False) {
+			add_token(type, "false", false);
+		}
+		else {
+			add_token(type);
 		}
 	}
 
@@ -655,7 +644,14 @@ namespace aera::lexer {
 	}
 
 	void Lexer::error(const std::string& msg, const std::string& note) {
-		reporter_.add_error(source_context_.filename(), get_token_length(), start_location(), msg, std::string(source_context_.get_line(line)), note);
+		std::string line_text;
+		try {
+			line_text = std::string(source_context_.get_line(line - 1));
+		}
+		catch (const std::out_of_range&) {
+			line_text = "";
+		}
+		reporter_.add_error(source_context_.filename(), get_token_length(), start_location(), msg, line_text, note);
 		add_token(TokenType::Illegal);
 	}
 }
