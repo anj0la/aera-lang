@@ -115,14 +115,14 @@ argument_list = expression { ","  expression } ;
 ## Statements
 
 ```ebnf
-statement = variable_declaration
-            | const_declaration
+statement = declaration
             | expression_statement
             | return_statement
             | if_statement
             | while_statement
             | for_statement
             | loop_statement
+            | match_statement
             | break_statement
             | continue_statement
             | block ;
@@ -133,6 +133,9 @@ if_statement = "if" expression statement ["else" statement] ;
 while_statement = "while" expression statement ;
 for_statement = "for" identifier "in" expr [".." expr] statement ; 
 loop_statement = "loop" statement ;
+match_statement = "match" expression "{" { match_clause } "}" ;
+match_clause = pattern "=>" expression [","] ;
+pattern = literal | identifier ;
 break_statement = "break" ;
 continue_statement = "continue" ;
 block = "{" { statement } "}" ;
@@ -183,14 +186,16 @@ type = primitive_type
      | user_type 
      | dynamic_array_type
      | map_type
+     | set_type
      | generic_type 
      | static_array_type ; 
 
 primitive_type = "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
 user_type = identifier ; 
-dynamic_array_type = identifier !" "<" type ">" ; 
+dynamic_array_type = identifier "!" "<" type ">" ; 
 map_type = identifier "!" "<" type "," type ">" ;
-generic_type = identifier !" "<" type_list ">" ; 
+set_type = identifier "!" "<" type ">" ; 
+generic_type = identifier "!" "<" type_list ">" ; 
 static_array_type = type array_dimensions ;
 
 array_dimensions = ( "[" [integer_literal] "]" ) { ( "[" [integer_literal] "]" ) } ;
