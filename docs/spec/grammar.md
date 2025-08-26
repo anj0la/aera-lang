@@ -187,15 +187,19 @@ type = primitive_type
      | dynamic_array_type
      | map_type
      | set_type
-     | generic_type 
+     | generic_type
+     | opt_type
+     | res_type
      | static_array_type ; 
 
 primitive_type = "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
 user_type = identifier ; 
-dynamic_array_type = identifier "!" "<" type ">" ; 
-map_type = identifier "!" "<" type "," type ">" ;
-set_type = identifier "!" "<" type ">" ; 
-generic_type = identifier "!" "<" type_list ">" ; 
+dynamic_array_type = "arr" "!" "<" type ">" ; 
+map_type = "map" "!" "<" type "," type ">" ;
+set_type = "set" "!" "<" type ">" ; 
+generic_type = identifier "!" "<" type_list ">" ;
+opt_type = "opt" "!" "<" type ">" ;
+res_type = "res" "!" "<" type ">" ; 
 static_array_type = type array_dimensions ;
 
 array_dimensions = ( "[" [integer_literal] "]" ) { ( "[" [integer_literal] "]" ) } ;
