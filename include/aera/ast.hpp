@@ -28,17 +28,18 @@ namespace aera {
 	struct TraitDecl;
 	struct WithDecl;
 	struct Expr;
-	struct Assignment;
-	struct Conditional;
-	struct Binary;
-	struct Unary;
-	struct Cast;
-	struct ArrayAcces;
-	struct FnCall;
-	struct FieldAccess;
-	struct Grouping;
-	struct Literal;
-	struct Identifier;
+	struct AssignmentExpr;
+	struct ConditionalExpr;
+	struct BinaryExpr;
+	struct UnaryExpr;
+	struct CastExpr;
+	struct ArrayAccesExpr;
+	struct FnCallExpr;
+	struct FieldAccessExpr;
+	struct GroupingExpr;
+	struct LiteralExpr;
+	struct IdentifierExpr;
+	struct UnwrapExpr;
 	struct Stmt;
 	struct ExprStmt;
 	struct ReturnStmt;
@@ -80,9 +81,7 @@ namespace aera {
 
 	struct FnDecl : Decl {
 		Token name;
-		std::vector<Token> decorators;
 		std::optional<TokenType> visibility_modifier;
-		std::optional<TokenType> behaviour_modifier; // currently supporting modifies, could have others as well (turn into vector)
 		std::vector<std::pair<Token, std::unique_ptr<Type>>> params;
 		std::optional<std::unique_ptr<Type>> return_type;
 		std::vector<std::unique_ptr<Stmt>> body;
@@ -148,10 +147,10 @@ namespace aera {
 		std::unique_ptr<Decl> decl;
 
 		static ClassMember make_field(std::unique_ptr<FieldDecl> field) {
-			{ ClassTypeKind::Field, std::move(field) };
+			{ ClassTypeKind::Field, std::move(field); };
 		}
 		static ClassMember make_function(std::unique_ptr<FnDecl> fn) {
-			{ ClassTypeKind::Function, std::move(fn) };
+			{ ClassTypeKind::Function, std::move(fn); };
 		}
 	};
 
@@ -179,17 +178,18 @@ namespace aera {
 	struct ExprVisitor {
 		virtual ~ExprVisitor() = default;
 
-		virtual void visit_assignment_expr(const Assignment& expr) = 0;
-		virtual void visit_conditional_expr(const Conditional& expr) = 0;
-		virtual void visit_binary_expr(const Binary& expr) = 0;
-		virtual void visit_unary_expr(const Unary& expr) = 0;
-		virtual void visit_cast_expr(const Cast& expr) = 0;
+		virtual void visit_assignment_expr(const AssignmentExpr& expr) = 0;
+		virtual void visit_conditional_expr(const ConditionalExpr& expr) = 0;
+		virtual void visit_binary_expr(const BinaryExpr& expr) = 0;
+		virtual void visit_unary_expr(const UnaryExpr& expr) = 0;
+		virtual void visit_cast_expr(const CastExpr& expr) = 0;
 		virtual void visit_array_access_expr(const ArrayAccess& expr) = 0;
-		virtual void visit_fn_call_expr(const FnCall& expr) = 0;
-		virtual void visit_field_access_expr(const FieldAccess& expr) = 0;
-		virtual void visit_grouping_expr(const Grouping& expr) = 0;
-		virtual void visit_literal_expr(const Literal& expr) = 0;
-		virtual void visit_identifier_expr(const Identifier& expr) = 0;
+		virtual void visit_fn_call_expr(const FnCallExpr& expr) = 0;
+		virtual void visit_field_access_expr(const FieldAccessExpr& expr) = 0;
+		virtual void visit_grouping_expr(const GroupingExpr& expr) = 0;
+		virtual void visit_literal_expr(const LiteralExpr& expr) = 0;
+		virtual void visit_identifier_expr(const IdentifierExpr& expr) = 0;
+		virtual void visit_unwrap_expr(const UnwrapExpr& expr) = 0;
 	};
 
 	// Expressions
@@ -202,7 +202,7 @@ namespace aera {
 		virtual void accept(ExprVisitor& visitor) const = 0;
 	}; 
 
-	struct Assignment : Expr {
+	struct AssignmentExpr : Expr {
 		std::unique_ptr<Expr> expr;
 		Token op;
 		std::unique_ptr<Expr> rhs;
@@ -212,7 +212,7 @@ namespace aera {
 		}
 	};
 
-	struct Conditional : Expr {
+	struct ConditionalExpr : Expr {
 		std::unique_ptr< Expr> conditional;
 		std::unique_ptr< Expr> true_expr;
 		std::unique_ptr< Expr> false_expr;
@@ -222,7 +222,7 @@ namespace aera {
 		}
 	};
 
-	struct Binary : Expr {
+	struct BinaryExpr : Expr {
 		std::unique_ptr< Expr> lhs;
 		Token op;
 		std::unique_ptr< Expr> rhs;
@@ -232,7 +232,7 @@ namespace aera {
 		}
 	};
 
-	struct Unary : Expr {
+	struct UnaryExpr : Expr {
 		Token op;
 		std::unique_ptr< Expr> rhs;
 
@@ -241,7 +241,7 @@ namespace aera {
 		}
 	};
 
-	struct Cast : Expr {
+	struct CastExpr : Expr {
 		std::unique_ptr<Expr> expr;
 		std::unique_ptr<Type> target_type;
 
@@ -263,7 +263,7 @@ namespace aera {
 		}
 	};
 
-	struct FnCall : Expr {
+	struct FnCallExpr : Expr {
 		std::unique_ptr< Expr> callee;
 		Token paren;
 		std::vector<std::unique_ptr< Expr>> args;
@@ -273,7 +273,7 @@ namespace aera {
 		}
 	};
 
-	struct FieldAccess : Expr {
+	struct FieldAccessExpr : Expr {
 		std::unique_ptr< Expr> obj;
 		Token name;
 
@@ -287,7 +287,7 @@ namespace aera {
 
 	};
 
-	struct Grouping : Expr {
+	struct GroupingExpr : Expr {
 		std::unique_ptr< Expr> expr;
 
 		void accept(ExprVisitor& visitor) const override {
@@ -295,7 +295,7 @@ namespace aera {
 		}
 	};
 
-	struct Literal : Expr {
+	struct LiteralExpr : Expr {
 		Token token;
 		std::unique_ptr<Type> type;
 		
@@ -304,7 +304,7 @@ namespace aera {
 		}
 	};
 
-	struct Identifier : Expr {
+	struct IdentifierExpr : Expr {
 		Token name;
 		
 		void accept(ExprVisitor& visitor) const override {
@@ -313,6 +313,14 @@ namespace aera {
 
 		bool is_lvalue() const override { 
 			true; 
+		}
+	};
+
+	struct UnwrapExpr : public Expr {
+		std::unique_ptr<Expr> operand;
+
+		void accept(ExprVisitor& visitor) const override {
+			visitor.visit_unwrap_expr(*this);
 		}
 	};
 
@@ -414,7 +422,7 @@ namespace aera {
 	};
 
 	struct MatchClause {
-		std::unique_ptr<Expr> pattern;  // Can be Literal or Identifier
+		std::unique_ptr<Expr> pattern;  // Can be LiteralExpr or IdentifierExpr
 		std::unique_ptr<Expr> expression;
 	};
 

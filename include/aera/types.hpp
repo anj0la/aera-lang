@@ -61,4 +61,13 @@ namespace aera {
         std::unique_ptr<Type> element_type;
         std::vector<int> dimensions;
     };
+
+    struct OptionalType : public Type {
+        std::unique_ptr<Type> wrapped_type;
+    };
+
+    struct ResultType : public Type {
+        std::unique_ptr<Type> success_type;
+        std::unique_ptr<Type> error_type;
+    };
 }

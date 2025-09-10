@@ -67,17 +67,21 @@ namespace aera::parser {
 		std::unique_ptr<Stmt> while_statement();
 		std::unique_ptr<Stmt> for_statement();
 		std::unique_ptr<Stmt> loop_statement();
+		std::unique_ptr<Stmt> match_statement();
+		std::optional<MatchClause> match_clause();
 		std::unique_ptr<BlockStmt> block();
 
 		// Types
 
 		std::unique_ptr<Type> parse_type();
+		std::unique_ptr<Type> parse_base_type();
 		std::unique_ptr<Type> parse_primitive_type(const std::string& name);
+		std::unique_ptr<Type> parse_builtin_type(const std::string& name);
 		std::unique_ptr<Type> parse_generic_type(const std::string& name);
 		std::unique_ptr<Type> parse_user_type(const std::string& name);
 		std::vector<int> parse_array_dimensions();
 
-		bool is_primitive_type();
+		bool is_primitive_type(const std::string& name) const;
 
 		// Other parsing functions
 
@@ -95,6 +99,7 @@ namespace aera::parser {
 		bool check_field_declaration();
 		bool check_fn_declaration();
 		void error(const std::string& msg, const std::string& note = "");
+		void skip_newlines();
 	};
 
 }
