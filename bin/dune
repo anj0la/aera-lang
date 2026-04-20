@@ -1,0 +1,4 @@
+(executable
+ (public_name aera)
+ (name main)
+ (libraries aera))
