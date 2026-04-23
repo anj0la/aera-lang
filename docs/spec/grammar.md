@@ -4,10 +4,7 @@ Aera's grammar is used to parse the sequence of tokens into the abstract syntax 
 
 ## Table of Contents
 
-- [Declarations](#declarations)
-  - [Function Declaration](#function-declaration)
-  - [Variable Declaration](#variable-declaration)
-  - [Type Declaration](#type-declaration)
+- [Program](#declarations)
 - [Expressions](#expressions)
   - [Precedence and Associativity](#precedence-and-associativity)
   - [Two Types of Expressions](#two-types-of-expressions)
@@ -18,23 +15,6 @@ Aera's grammar is used to parse the sequence of tokens into the abstract syntax 
 
 ## Program
 A program is a sequence of items, top-level components that make up the module.
-
-```ebnf
-program = { item } EOF ;
-```
-
-```ebnf
-item = function ;
-```
-
-### Function
-The following rules define how a function is declared.
-
-```ebnf
-function = "fn" identifier "(" [parameter_list] ")" ["->", type] block ;
-parameter_list = parameter { "," parameter } ;
-parameter = identifier ":" type ;
-```
 
 ## Expressions
 Expressions compute values in Aera. There are a number of unary and binary operators with different levels of precedence.
@@ -59,142 +39,40 @@ The following table showcases the operator precedence, along with its associativ
 
 ### Two Types of Expressions
 
-Aera splits expressions into two types: ones containing block expressions and ones without it. The former includes expressions usually represented as statements in other languages, such as the if, while and for loop expressions.
+Aera splits expressions into two types: ones containing block expressions and ones without it. 
+
+The former includes expressions usually represented as statements in other languages, such as the if, while and for loop expressions.
 
 The latter includes expressions that are expected in programming languages (e.g., a + b).
-
-```ebnf
-expression = expression_with_block
-            | expression_without_block ;
-
-expression_with_block = block_expression
-            | loop_expression
-            | if_expression
-            | match_expression ;
-    
-expression_without_block = literal_expression
-            | operator_expression
-            | grouped_expression
-            | call_expression
-            | break_expression
-            | continue_expression
-            | range_expression
-            | return_expression ;
-```
 
 ### Expression With Block
 
 Listed below are the grammar rules for expressions containing block expressions. 
 
-```ebnf
-block_expression = "{" { statement } expression "}" ;
-loop_expression = infinite_loop_expression;
-            | while_loop_expression
-            | for_loop_expression ;
+These are expressions that produce a value inside of a block. In other languages, these expressions are "statements" and do not return a value. However, in Aera, these expressions do return a value. Examples include:
 
-infinite_loop_expression = "loop" block_expression ;
-while_loop_expression = "while" expression block_expression ; 
-for_loop_expression = "for" pattern "in" expression block_expression ;
+```aera
+loop {
+    do_something_forever() # returns the unit type
+}
 
-pattern = range_pattern
-            | literal_pattern
-            | identifier_pattern ;
-
-range_pattern = range_exclusive_pattern
-            | range_inclusive_pattern
-            | range_from_pattern
-            | range_to_pattern
-            | range_to_inclusive_pattern ;
-
-range_exclusive_pattern = literal_pattern ".." literal_pattern ;
-range_inclusive_pattern = literal_pattern "..=" literal_pattern ;
-range_from_pattern = literal_pattern ".." ;
-range_to_pattern = ".." literal_pattern ;
-range_to_inclusive_pattern = "..=" literal_pattern ;
-
-literal_pattern = [ "-" ] literal ;
-
-identifier_pattern = identifier ;
+if cond {
+    return 1
+}
+else {
+    return 2
+}
 ```
 
 ### Expression Without Block
 
-Listed below are the grammar rules for expressions seen in other languages.
+These are expressions that are seen in other languages. Examples include:
 
-```ebnf
-literal_expression = literal ;
-operator_expression = assignment_expression
-            | compound_assignment_expression
-            | comparsion_expression
-            | arithmetic_expression
-            | bitwise_expression 
-            | logical_expression
-            | negation_expression 
-            | try_propagation_expression
-            | fallback_expression
-            | type_cast_expression ;
-
-assignment_expression = expression "=" expression ;
-compound_assignment_expression = expression "+=" expression
-            | expression "-=" expression
-            | expression "*=" expression
-            | expression "/=" expression
-            | expression "%=" expression
-            | expression "&=" expression
-            | expression "|=" expression
-            | expression "^=" expression
-            | expression "<<=" expression
-            | expression ">>=" expression ;
-
-comparsion_expression = expression "==" expression
-            | expression "!=" expression
-            | expression ">" expression
-            | expression "<" expression
-            | expression ">=" expression
-            | expression "<=" expression ;
-
-arithmetic_expression = expression "+" expression
-            | expression "-" expression
-            | expression "*" expression
-            | expression "/" expression
-            | expression "%" expression ;
-
-bitwise_expression = expression "&" expression
-            | expression "|" expression
-            | expression "^" expression
-            | expression ">>" expression
-            | expression "<<" expression ;
-
-logical_expression = expression "&&" expression
-            | expression "||" expression ;
-
-negation_expression = "-" expression
-            | "!" expression ;
-
-try_propagation_expression = expression "?" ;
-fallback_expression = expression "??" ;
-type_cast_expression = expression "as" expression ; 
-
-grouped_expression = "(" expression ")" ;
-call_expression = "(" [ call_params ] ")" ;
-call_params = expression { ","  expression } ;
-break_expression = "break" ;
-continue_expression = "continue" ;
-range_expression = range_from_to_expression
-            | range_from_expression
-            | range_to_expression
-            | range_full_expression
-            | range_inclusive_expression
-            | range_to_inclusive_expression ;
-
-range_from_to_expression = expression ".." expression;
-range_from_expression = expression ".." ;
-range_to_expression = ".." expression ; 
-range_full_expression = ".." ;
-range_inclusive_expression = expression "..=" expression ;
-range_to_inclusive_expression = "..=" expression ;
-
-return_expression = "return" [ expression ] ;
+```aera
+1 + 2 + 3
+4 / 5
+12 == 12
+2 && 5
 ```
 
 ## Statements
@@ -202,15 +80,10 @@ return_expression = "return" [ expression ] ;
 Statements introduce or control structure in Aera, as opposed to statements in other familiar languages.
 Let statements are immutable, and mutability will be added once the language further develops.
 
-```ebnf
-statement = let_statement
-            | const_statement
-            | expression_statement ;
-
-
-let_statement = "let" identifier [ ":" type ] [ "=" expression ] ;
-const_statement = "const" identifier [ ":" type ] "=" expression ;
-expression_statement = expression ;
+```aera
+let name: string = "Jane" # let statement
+const pi: float32 = 3.14  # const statement
+1 + 2                     # expression statement
 ```
 
 ## Lexical Grammar
