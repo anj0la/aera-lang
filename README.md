@@ -1,6 +1,6 @@
 # Aera Programming Language
 
-A statically-typed, safe and simple programming language designed to preserve control and performance while introducing compile-time safety and clean syntax.
+A statically-typed, safe and simple programming language.
 
 ## Overview
 
