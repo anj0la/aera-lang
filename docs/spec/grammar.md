@@ -11,7 +11,6 @@ Aera's grammar is used to parse the sequence of tokens into the abstract syntax 
   - [Expression With Block](#expression-with-block)
   - [Expression Without Block](#expression-without-block)
 - [Statements](#statements)
-- [Lexical Grammar](#lexical-grammar)
 
 ## Program
 A program is a sequence of items, top-level components that make up the module.
@@ -84,50 +83,4 @@ Let statements are immutable, and mutability will be added once the language fur
 let name: string = "Jane" # let statement
 const pi: float32 = 3.14  # const statement
 1 + 2                     # expression statement
-```
-
-## Lexical Grammar
-
-```ebnf
-literal = integer_literal
-          | float_literal
-          | character_literal
-          | string_literal
-          | boolean_literal ;
-
-integer_literal = decimal_integer
-                | hexadecimal_integer
-                | binary_integer
-                | octal_integer ;
-
-decimal_integer = digit { digit } ;
-hexadecimal_integer = "0" ( "x" | "X")  hex_digit { hex_digit } ;
-binary_integer = "0" ( "b" | "B" ) binary_digit { binary_digit } ;
-octal_integer = "0" ( "o" | "O" ) octal_digit { octal_digit } ;
-float_literal = decimal_integer "." decimal_integer [ scientific_notation ]
-              | decimal_integer scientific_notation ;
-scientific_notation = ( "e" | "E" ) [ "+" | "-" ] decimal_integer ;
-
-float_literal = integer_literal "." integer_literal ;
-character_literal = "'" character  "'" ";" ;
-string_literal = """ { character } """ ";" ;
-boolean_literal = "true" | "false" ;
-
-character = printable | escape_sequence ;
-printable = alpha | digit | symbol | space ;
-alpha = "a" ... "z" | "A" ... "Z" ;
-digit = "0" ... "9";
-hex_digit = digit | "a" ... "f" | "A" ... "F" ;
-binary_digit = "0" | "1" ;
-octal_digit = "0" ... "7" ;
-symbol = "!" ... "/" | ":" ... "@" | "[" ... "`" | "{" ... "~" ;
-underscore = "_" ;
-escape_sequence = "\\" ( "n" | "t" | "r" | "\"" | "'" | "\\" ) ;
-space = " " ;
-
-identifier = ( alpha | "_" ) { ( alpha | digit | "_" ) } ;
-
-type = primitive_type ; 
-
-primitive_type = "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
 ```
