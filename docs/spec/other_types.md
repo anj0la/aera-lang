@@ -1,5 +1,5 @@
-# Error Handling
-Aera provides two types for error handling: `opt!<T>` and `res!<T>`, and convenient operators when working with these types.
+# Other Types
+Aera provides two types to represent optional values or error values: `opt!<T>` and `res!<T>`, and convenient operators when working with these types.
 
 ## Table of Contents
 

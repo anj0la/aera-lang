@@ -9,6 +9,6 @@ Welcome to the **Aera Language Specification**! This folder documents the syntax
 - [Variables](./variables.md)
 - [Control Flow](./control_flow.md)
 - [Type System](./type_system.md)
-- [Error Handling](./type_system.md)
+- [Other Types](./other_types.md)
 
 

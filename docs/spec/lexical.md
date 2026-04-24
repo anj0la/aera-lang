@@ -48,8 +48,6 @@ Listed below are the following valid operators in Aera:
 | >>    | Arithmetic and Logical Left-shift  |
 | <<    | Arithmetic and Logical Right-shift |
 | =     | Assignment and Initialization      |
-| ++    | Increment                          |
-| --    | Decrement                          |
 | +=    | Add-and-assign                     |
 | -=    | Subtract-and-assign                |
 | \*=   | Multiply-and-assign                |
