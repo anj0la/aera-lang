@@ -1,4 +1,4 @@
-open Source_location
+open Position
 
 type token_kind  = 
 | Identifier of string
@@ -77,5 +77,5 @@ type token_kind  =
 type token = {
     kind: token_kind;
     lexeme: string;
-    loc: source_location;
+    pos: position;
 }

@@ -1,11 +1,11 @@
-open Source_location
+open Position
 open Token
 
 type lexer = {
     source: string;
     start: int;
     curr: int;
-    loc: source_location;
+    pos: position;
 }
 
 let is_digit c = 
@@ -51,13 +51,25 @@ let peek_next lex =
         Some lex.source.[lex.curr + 1] (* returns the character 1 position ahead of the current pointer *)
 
 let advance lex =
-    let c = lex.source.[lex.curr] in 
-    (c, { lex with curr = lex.curr + 1 }) (* creates a NEW lexer record with the updated current pointer*)
+    let c = lex.source.[lex.curr] in (* creates a NEW lexer record with the updated current pointer and other possible values *)
+    match c with 
+    | '\n' -> (c, { lex with 
+                    curr = lex.curr + 1;
+                    pos = { line = lex.pos.line + 1; col = 1 }; })
+    | '\t' -> (c, { lex with 
+                    curr = lex.curr + 1;
+                    pos = { lex.pos with col = lex.pos.col + 4 }; })
+    | '\r' -> (c, { lex with 
+                    curr = lex.curr + 1;
+                    pos = { lex.pos with col = 1 }; })
+    | _ -> (c, { lex with 
+                    curr = lex.curr + 1;
+                    pos = { lex.pos with col = lex.pos.col + 1 }; })
 
 let make_token lex kind =
     let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    { kind = kind; lexeme = text; loc = lex.loc }
+    { kind = kind; lexeme = text; pos = lex.pos }
 
 let rec read_line_comment lex = 
     if peek lex = Some '\n' || is_at_end lex then lex
@@ -296,3 +308,4 @@ let read_number lex c =
             read_decimal_number lex
     else
           read_decimal_number lex
+

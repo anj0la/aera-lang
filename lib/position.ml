@@ -1,4 +1,4 @@
-type source_location = {
+type position = {
     line: int;
     col: int;
 }
