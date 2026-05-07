@@ -8,6 +8,12 @@ type lexer = {
     pos: position;
 }
 
+type lex_result =
+    | Found of token
+    | Err of string * lexer
+    | Skip
+
+
 let is_digit c = 
     c >= '0' && c <= '9'
 
@@ -66,10 +72,32 @@ let advance lex =
                     curr = lex.curr + 1;
                     pos = { lex.pos with col = lex.pos.col + 1 }; })
 
-let make_token lex kind =
+let bump lex = { lex with curr = lex.curr + 1 } (* moves the current pointer by one, ONLY returns the updated lexer state, NOT the character *)
+
+let make_token kind lex =
     let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    { kind = kind; lexeme = text; pos = lex.pos }
+    ({ kind = kind; lexeme = text; pos = lex.pos }, lex)
+
+let ok_token kind lex = Ok (make_token kind lex) 
+
+let make_int_token lex = 
+    let token = (IntLiteral (int_of_string (String.sub lex.source lex.start (lex.curr - lex.start)))) in 
+    ok_token token lex (* similar to ok_token which returns a tuple, the token and the updated lex *)
+
+let make_float_token lex = 
+    let token = (FloatLiteral (float_of_string (String.sub lex.source lex.start (lex.curr - lex.start)))) in
+    ok_token token lex
+
+let make_identifier_token lex = 
+    let token = (Identifier (String.sub lex.source lex.start (lex.curr - lex.start))) in
+    ok_token token lex
+
+let found_token (token, lex) = (Found token, lex) (* make_token returns a tuple, so found token takes that tuple and wraps the token around Found *)
+
+let err_token msg lex = (Err (msg, lex)) (* changing to create a diagonsitic reporter similiar to C++ version *)
+
+let skip lex = (Skip, lex)
 
 let rec read_line_comment lex = 
     if peek lex = Some '\n' || is_at_end lex then lex
@@ -134,13 +162,12 @@ let read_char lex =
         | Ok (c', lex'') -> 
             match close_char lex'' c' with
             | Error e -> Error e
-            | Ok (final_c, lex''') -> Ok (make_token lex''' (CharLiteral final_c))
+            | Ok (final_c, lex''') -> lex''' |> ok_token (CharLiteral final_c)
 
 let rec read_string lex buf =
     if is_at_end lex then Error ("unterminated string literal", lex)
     else if peek lex = Some '"' then
-        let (_, lex') = advance lex in
-        Ok (make_token lex' (StringLiteral buf))
+        let (_, lex') = advance lex in lex' |> ok_token (StringLiteral buf)
     else
         let (c, lex') = advance lex in
         if c = '\\' then
@@ -152,7 +179,7 @@ let rec read_string lex buf =
                 | 'n' -> read_string lex'' (buf ^ String.make 1 '\n')
                 | 't' -> read_string lex'' (buf ^ String.make 1 '\t')
                 | 'r' -> read_string lex'' (buf ^ String.make 1 '\r')
-                | '\\' -> read_string lex'' (buf ^ String.make 1 '\\')
+                | '/' -> read_string lex'' (buf ^ String.make 1 '/')
                 | '\'' -> read_string lex'' (buf ^ String.make 1 '\'')
                 | '"' -> read_string lex'' (buf ^ String.make 1 '"')
                 | _ -> let lex''' = skip_until_closing_quote lex'' '"' in
@@ -178,7 +205,7 @@ let read_hexadecimal_number lex =
         else
             match read_hexadecimal_number_helper lex' with
             | Error e -> Error e
-            | Ok lex'' -> Ok (make_token lex'' (IntLiteral (int_of_string (String.sub lex''.source lex''.start (lex''.curr - lex''.start)))))
+            | Ok lex'' -> lex'' |> make_int_token
 
 let rec read_binary_number_helper lex =
     match peek lex with
@@ -198,7 +225,7 @@ let read_binary_number lex =
         else
             match read_binary_number_helper lex' with
             | Error e -> Error e
-            | Ok lex'' -> Ok (make_token lex'' (IntLiteral (int_of_string (String.sub lex''.source lex''.start (lex''.curr - lex''.start)))))
+            | Ok lex'' -> lex'' |> make_int_token
 
 let rec read_octal_number_helper lex =
     match peek lex with
@@ -218,7 +245,7 @@ let read_octal_number lex =
         else
             match read_octal_number_helper lex' with
             | Error e -> Error e
-            | Ok lex'' -> Ok (make_token lex'' (IntLiteral (int_of_string (String.sub lex''.source lex''.start (lex''.curr - lex''.start)))))
+            | Ok lex'' -> lex'' |> make_int_token
    
 let is_valid_fractional_part lex =
     if peek lex = Some '.' then
@@ -254,15 +281,14 @@ let read_decimal_number lex =
     match read_decimal_number_helper lex false with
     | Error e -> Error e
     | Ok (lex', is_float) -> if peek lex' = Some '.' && peek_next lex' = Some '.' then
-        Ok (make_token lex' (IntLiteral (int_of_string (String.sub lex'.source lex'.start (lex'.curr - lex'.start))))) (* return early, 
-        main loop consumes the range operator ..*)
+        lex' |> make_int_token (* return early, main loop consumes the range operator ..*)
     else
         (match is_valid_fractional_part lex' with
         | Error e -> Error e
         | Ok lex'' -> if is_float then 
-            Ok (make_token lex'' (FloatLiteral (float_of_string (String.sub lex''.source lex''.start (lex''.curr - lex''.start)))))
+            lex'' |> make_float_token
         else
-            Ok (make_token lex'' (IntLiteral (int_of_string (String.sub lex''.source lex''.start (lex''.curr - lex''.start))))))
+           lex'' |> make_int_token)
 
 let rec read_identifier_helper lex =
      match peek lex with
@@ -277,24 +303,24 @@ let read_identifier lex =
     | Ok lex' -> let lexeme =
         String.sub lex'.source lex'.start (lex'.curr - lex'.start) in
         match String.lowercase_ascii lexeme with
-        | "true" -> Ok (make_token lex' True)
-        | "false" -> Ok (make_token lex' False)
-        | "fn" -> Ok (make_token lex' Fn)
-        | "let" -> Ok (make_token lex' Let)
-        | "mut" -> Ok (make_token lex' Mut)
-        | "const" -> Ok (make_token lex' Const)
-        | "if" -> Ok (make_token lex' If)
-        | "else" -> Ok (make_token lex' Else)
-        | "for" -> Ok (make_token lex' For)
-        | "while" -> Ok (make_token lex' While)
-        | "loop" -> Ok (make_token lex' Loop)
-        | "match" -> Ok (make_token lex' Match)
-        | "break" -> Ok (make_token lex' Break)
-        | "continue" -> Ok (make_token lex' Continue)
-        | "return" -> Ok (make_token lex' Return)
-        | "in" -> Ok (make_token lex' In)
-        | "as" -> Ok (make_token lex' As)
-        | _ -> Ok (make_token lex' (Identifier (String.sub lex'.source lex'.start (lex'.curr - lex'.start))))
+        | "true" -> lex' |> ok_token True
+        | "false" -> lex' |> ok_token False
+        | "fn" -> lex' |> ok_token Fn
+        | "let" -> lex' |> ok_token Let
+        | "mut" -> lex' |> ok_token Mut
+        | "const" -> lex' |> ok_token Const
+        | "if" -> lex' |> ok_token If
+        | "else" -> lex' |> ok_token Else
+        | "for" -> lex' |> ok_token For
+        | "while" -> lex' |> ok_token While
+        | "loop" -> lex' |> ok_token Loop
+        | "match" -> lex' |> ok_token Match
+        | "break" -> lex' |> ok_token Break
+        | "continue" -> lex' |> ok_token Continue
+        | "return" -> lex' |> ok_token Return
+        | "in" -> lex' |> ok_token In
+        | "as" -> lex' |> ok_token As
+        | _ -> lex' |> make_identifier_token
     
 let read_number lex c = 
     if c = '0' then
@@ -308,4 +334,4 @@ let read_number lex c =
             read_decimal_number lex
     else
           read_decimal_number lex
-
+         

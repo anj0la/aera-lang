@@ -52,6 +52,7 @@ type token_kind  =
 | SlashEqual
 | PercentEqual
 | AmpEqual
+| PipeEqual
 | CaretEqual
 | MinusGreater
 | PeriodPeriod
