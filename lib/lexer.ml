@@ -1,3 +1,4 @@
+open Error
 open Position
 open Token
 
@@ -6,13 +7,13 @@ type lexer = {
     start: int;
     curr: int;
     pos: position;
+    tokens: token list;
 }
 
 type lex_result =
 | Found of token
 | Err of string * lexer
 | Skip
-
 
 let is_digit c = 
     c >= '0' && c <= '9'
@@ -73,6 +74,24 @@ let advance lex =
                     pos = { lex.pos with col = lex.pos.col + 1 }; })
 
 let bump lex = { lex with curr = lex.curr + 1 } (* moves the current pointer by one, ONLY returns the updated lexer state, NOT the character *)
+
+let add_token kind lex =
+      let text = 
+        String.sub lex.source lex.start (lex.curr - lex.start) in
+    let token = { kind = kind; lexeme = text; pos = lex.pos } in
+    { lex with tokens = token :: lex.tokens}
+
+let add_int_token lex =
+      let text = 
+        String.sub lex.source lex.start (lex.curr - lex.start) in
+    let token = { kind = (IntLiteral (int_of_string text)); lexeme = text; pos = lex.pos } in
+    { lex with tokens = token :: lex.tokens}
+
+let add_float_token kind lex =
+      let text = 
+        String.sub lex.source lex.start (lex.curr - lex.start) in
+    let token = { kind = (FloatLiteral (float_of_string text)); lexeme = text; pos = lex.pos } in
+    { lex with tokens = token :: lex.tokens}
 
 let make_token kind lex =
     let text = 
@@ -162,12 +181,12 @@ let read_char lex =
         | Ok (c', lex'') -> 
             match close_char lex'' c' with
             | Error e -> Error e
-            | Ok (final_c, lex''') -> lex''' |> ok_token (CharLiteral final_c)
+            | Ok (final_c, lex''') -> lex''' |> add_token (CharLiteral final_c) |> Result.ok (* returns updated lex with tokens updated *)
 
 let rec read_string lex buf =
     if is_at_end lex then Error ("unterminated string literal", lex)
     else if peek lex = Some '"' then
-        let (_, lex') = advance lex in lex' |> ok_token (StringLiteral buf)
+        let (_, lex') = advance lex in lex' |> add_token (StringLiteral buf) |> Result.ok
     else
         let (c, lex') = advance lex in
         if c = '\\' then
