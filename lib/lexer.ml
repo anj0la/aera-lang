@@ -9,9 +9,9 @@ type lexer = {
 }
 
 type lex_result =
-    | Found of token
-    | Err of string * lexer
-    | Skip
+| Found of token
+| Err of string * lexer
+| Skip
 
 
 let is_digit c = 
