@@ -1,5 +1,9 @@
 # Type System
-Aera’s type system is designed to be expressive, safe, and simple. The available types fall into two categories: primitive and compound types.
+Aera’s type system is designed to be expressive, safe, and simple. Many of the types listed below are types seen in other languages, including variant, 
+option and result types seen in many popular functional programming languages, such as OCaml.
+
+
+> In Aera, types are immutable by default. To make them mutable, the `mut` keyword must be provided after the `let` keyword.
 
 ## Table of Contents
 
@@ -13,6 +17,14 @@ Aera’s type system is designed to be expressive, safe, and simple. The availab
   - [Array](#array)
   - [Tuple](#tuple)
   - [Map](#map)
+- [Option and Result Types](#option-and-result-types)
+  - [Option](#option)
+  - [Result](#result)
+  - [Operators](#operators)
+- [User Defined Types](#user-defined-types)
+  - [Variant](#variant)
+  - [Struct](#struct)
+
 
 ## Primitive Types
 
@@ -76,5 +88,120 @@ A `map!<K, V>` is a generic associative container that stores key-value pairs, w
 Maps are useful for storing and retrieving data by keys quickly and are implemented using a hash-based structure under the hood.
 
 ```aera
-let fruits: map!<str, int32> = {"apple": 0, "banana": 1, "orange": 2 }
+let fruits: map!<str, int32> = {"apple": 0, "banana": 1 }
+```
+
+## Option And Result Types
+
+### Option
+
+An option type explicitly represents values that might not exist. This is the only way to represent "null" or missing values in Aera, making null pointer errors impossible for managed types.
+
+```aera
+let maybe_value: opt!<int32> = some(42)
+
+match maybe_value { 
+    some(value) => print("Got: {}", value)
+    none => print("No value")
+}
+```
+
+### Result
+
+A result type represents operations that can either succeed with a value of type `T` or fail with an error of type `E`. This makes error handling explicit and prevents forgotten error checks.
+
+```aera
+fn divide(a: float64, b: float64) -> res!<float64, string> { 
+    if b == 0.0 { 
+        err("Division by zero")
+    } 
+    ok(a / b)
+} 
+
+let result = divide(10.0, 2.0); 
+
+match result { 
+    ok(value) => print("Ok: {}", value)
+    err(message) => print("Err: {}", message)
+}
+```
+
+### Operators
+
+
+Aera provides two convenient operators for working with optionals and errors: `?` and  `??`.
+
+The `?` operator is used to unwrap both optional and error values. 
+
+When applied to an optional (`opt!<T>`), it unwraps the contained value if present, or returns `none` immediately from the current function if the value is absent. 
+
+```aera
+fn get_length(s: opt!<string>) -> opt!<int> {
+    let str = s?  # unwrap option, else return none from get_length
+    return str.length()
+}
+```
+
+When applied to a result (`res!<T, E>`), it attempts to unwrap the `ok` value, or returns the error immediately from the current function if the result contains an `err`.
+
+```aera
+fn read_file(path: string) -> res!<string, err> {
+    let content = open_file(path)?  # unwrap ok or return err early
+    return ok(content)
+}
+```
+
+The `??` operator is used to provide a fallback value for both optional and result types. 
+
+When applied to an expression that may be none (for `opt!<T>`) or err (for `res!<T, E>`), it unwraps the contained value if present, or returns the specified fallback value instead. This allows one to handle missing or failing values concisely without propagating them further.
+
+```aera
+fn get_name_or_default(maybe_name: opt!<string>) -> string {
+    return maybe_name ?? "Anonymous" # use "Anonymous" if none
+}
+
+fn safe_divide(a: int, b: int) -> int {
+    return divide(a, b) ?? 0 # use 0 if division returns an error
+}
+```
+
+## User Defined Types
+
+### Variant
+
+A variant is a sum type (or tagged union).
+
+At their simplest, they look like enums from C or C++, and They are defined using the `variant` keyword:
+
+```aera
+variant Shape {
+    Circle
+    Triangle
+    Rectangle
+    Square
+}
+```
+
+Variants can store data through the use of constructors. If a variant has no constructor, it stores no data. If it does, then it stores the data that is defined by the constructor.
+
+```aera
+variant Shape {
+    Circle(radius: float32)
+    Triangle(base: float32, height: float32)
+    Rectangle(width: float32, height: float32)
+    Square(side: float32)
+}
+```
+
+### Struct
+
+A struct is a product type. It defines a compositie data type.
+
+They work similary to C / C++ structs, with the difference being that structs are immutable by default.
+
+```aera
+struct Player = {
+    hp: int32
+    name: string
+}
 ```

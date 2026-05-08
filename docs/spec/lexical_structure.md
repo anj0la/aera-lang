@@ -64,8 +64,8 @@ Listed below are the following valid operators in Aera:
 | >=    | Greater than or equal to           |
 | <     | Less than                          |
 | <=    | Less than or equal to              |
-| ?     | Optional type                      |
-| ??    | Error type                         |
+| ?     | Try propagation                    |
+| ??    | Fallback                           |
 | ..    | Exclusive range                    |
 | ..=   | Inclusive range                    |
 
@@ -76,7 +76,7 @@ Listed below are the following punctuation and separator tokens used in Aera:
 | -------- | ----------------------------------------------------------------------------------------- |
 | \[ and ] | Subscript and deduced parameter lists                                                     |
 | ( and )  | Function call / declarations and tuple literals                                           |
-| { and }  | Blocks of control flow expressions, struct literals, body definitions (classes, functions) |
+| { and }  | Blocks of control flow expressions, struct literals, body definitions (classes, functions)|
 | ,        | Separate tuple and array elements                                                         |
 | .        | Member access                                                                             |
 | :        | Name binding patterns                                                                     |
@@ -85,14 +85,27 @@ Listed below are the following punctuation and separator tokens used in Aera:
 ### Other Tokens
 Listed below are some other tokens used in Aera that don’t fit into the above categories:
 
-| Token | Description        |
-| ----- | ------------------ |
-| ->    | Return type        |
-| =>    | Match syntax       |
-| @     | Compiler directive |
+| Token | Description                 |
+| ----- | --------------------------- |
+| ->    | Return type                 |
+| =>    | Match syntax. Lambda        |
+| @     | Compiler directive          |
 
 ## Comments
-Single-line comments begin with **#** and continue to the end of the line. Multi-line comments begin with an opening **<#** and a closing **#>**.
+Single-line comments begin with `#` and continue to the end of the line. Multi-line comments begin with an opening `<#` and a closing `#>`.
+
+```aera
+# This is a single line comment
+
+<# This is 
+a multi-line comment #>
+
+<# 
+This function returns the sum of two integers.
+#>
+fn add(a: int32, b: int32) -> int32:
+    a + b
+```
 
 ## Whitespace
 Spaces and tabs are used as token separators and are otherwise ignored.

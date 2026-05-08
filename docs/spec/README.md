@@ -5,10 +5,10 @@ Welcome to the **Aera Language Specification**! This folder documents the syntax
 ## Table of Contents
 
 - [Grammar](./grammar.md)
-- [Lexical Structure](./lexical.md)
+- [Lexical Structure](./lexical_structure.md)
 - [Variables](./variables.md)
+- [Functions](./functions.md)
 - [Control Flow](./control_flow.md)
 - [Type System](./type_system.md)
-- [Other Types](./other_types.md)
 
 
