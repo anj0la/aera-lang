@@ -74,6 +74,8 @@ type token_kind  =
 | Equal
 | LineComment  (* # *)
 | BlockComment (* <# ... #>*)
+| Illegal
+| EOF
 
 type token = {
     kind: token_kind;
