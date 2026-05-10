@@ -1,7 +1,7 @@
 open Position
 open Int64
 
-type token_kind  = 
+type token_kind = 
 | Identifier of string
 | IntLiteral of Int64.t
 | FloatLiteral of float
@@ -62,6 +62,7 @@ type token_kind  =
 | Amp
 | Pipe
 | Caret
+| Tilde
 | Plus
 | Minus
 | Star

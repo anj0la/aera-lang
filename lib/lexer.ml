@@ -115,15 +115,15 @@ let rec read_block_comment lex =
 
 let resolve_char lex c =
     if c = '\\' && not (is_at_end lex) then
-            let (c', lex') = advance lex in
-            match c' with
-            | 'n' -> Ok ('\n', lex')
-            | 't' -> Ok ('\t', lex')
-            | 'r' -> Ok ('\r', lex')
-            | '\\' -> Ok ('\\', lex')
-            | '\'' -> Ok ('\'', lex')
-            | '"' -> Ok ('"', lex')
-            | _ -> Error ("invalid escape sequence", lex')
+        let (c', lex') = advance lex in
+        match c' with
+        | 'n' -> Ok ('\n', lex')
+        | 't' -> Ok ('\t', lex')
+        | 'r' -> Ok ('\r', lex')
+        | '\\' -> Ok ('\\', lex')
+        | '\'' -> Ok ('\'', lex')
+        | '"' -> Ok ('"', lex')
+        | _ -> Error ("invalid escape sequence", lex')
         else if not (is_printable c) then
             if c = '\\' then Error ("unterminated escape sequence in character literal", lex)
             else
@@ -396,6 +396,7 @@ let read_token lex =
     | '^' -> (match peek lex with 
             | Some '=' -> lex |> bump |> add_token CaretEqual
             | _ -> lex |> add_token Caret)
+    | '~' -> lex |> add_token Tilde
     | '?' -> (match peek lex with 
             | Some '?' -> lex |> bump |> add_token QuestionQuestion
             | _ -> lex |> add_token Question)
