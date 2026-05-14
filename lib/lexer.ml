@@ -117,12 +117,12 @@ let resolve_char lex c =
     if c = '\\' && not (is_at_end lex) then
         let (c', lex') = advance lex in
         match c' with
-        | 'n' -> Ok ('\n', lex')
-        | 't' -> Ok ('\t', lex')
-        | 'r' -> Ok ('\r', lex')
-        | '\\' -> Ok ('\\', lex')
-        | '\'' -> Ok ('\'', lex')
-        | '"' -> Ok ('"', lex')
+        | 'n'   -> Ok ('\n', lex')
+        | 't'   -> Ok ('\t', lex')
+        | 'r'   -> Ok ('\r', lex')
+        | '\\'  -> Ok ('\\', lex')
+        | '\''  -> Ok ('\'', lex')
+        | '"'   -> Ok ('"', lex')
         | _ -> Error ("invalid escape sequence", lex')
         else if not (is_printable c) then
             if c = '\\' then Error ("unterminated escape sequence in character literal", lex)
@@ -173,13 +173,13 @@ let rec read_string lex buf =
             else
                 let (c', lex'') = advance lex' in
                 match c' with
-                | 'n' -> read_string lex'' (buf ^ String.make 1 '\n')
-                | 't' -> read_string lex'' (buf ^ String.make 1 '\t')
-                | 'r' -> read_string lex'' (buf ^ String.make 1 '\r')
-                | '/' -> read_string lex'' (buf ^ String.make 1 '/')
-                | '\'' -> read_string lex'' (buf ^ String.make 1 '\'')
-                | '"' -> read_string lex'' (buf ^ String.make 1 '"')
-                | _ -> let lex''' = skip_until_closing_quote lex'' '"' in
+                | 'n'   -> read_string lex'' (buf ^ String.make 1 '\n')
+                | 't'   -> read_string lex'' (buf ^ String.make 1 '\t')
+                | 'r'   -> read_string lex'' (buf ^ String.make 1 '\r')
+                | '/'   -> read_string lex'' (buf ^ String.make 1 '/')
+                | '\''  -> read_string lex'' (buf ^ String.make 1 '\'')
+                | '"'   -> read_string lex'' (buf ^ String.make 1 '"')
+                | _     -> let lex''' = skip_until_closing_quote lex'' '"' in
                         Error ("invalid escape sequence", lex''')
         else
             read_string lex' (buf ^ String.make 1 c)
@@ -300,24 +300,24 @@ let read_identifier lex =
     | Ok lex' -> let lexeme =
         String.sub lex'.source lex'.start (lex'.curr - lex'.start) in
         match String.lowercase_ascii lexeme with
-        | "true" -> lex' |> add_token True |> Result.ok
-        | "false" -> lex' |> add_token False |> Result.ok
-        | "fn" -> lex' |> add_token Fn |> Result.ok
-        | "let" -> lex' |> add_token Let |> Result.ok
-        | "mut" -> lex' |> add_token Mut |> Result.ok
-        | "const" -> lex' |> add_token Const |> Result.ok
-        | "if" -> lex' |> add_token If |> Result.ok
-        | "else" -> lex' |> add_token Else |> Result.ok
-        | "for" -> lex' |> add_token For |> Result.ok
-        | "while" -> lex' |> add_token While |> Result.ok
-        | "loop" -> lex' |> add_token Loop |> Result.ok
-        | "match" -> lex' |> add_token Match |> Result.ok
-        | "break" -> lex' |> add_token Break |> Result.ok
-        | "continue" -> lex' |> add_token Continue |> Result.ok
-        | "return" -> lex' |> add_token Return |> Result.ok
-        | "in" -> lex' |> add_token In |> Result.ok
-        | "as" -> lex' |> add_token As |> Result.ok
-        | _ -> lex' |> add_identifier_token |> Result.ok
+        | "true"        -> lex' |> add_token True |> Result.ok
+        | "false"       -> lex' |> add_token False |> Result.ok
+        | "fn"          -> lex' |> add_token Fn |> Result.ok
+        | "let"         -> lex' |> add_token Let |> Result.ok
+        | "mut"         -> lex' |> add_token Mut |> Result.ok
+        | "const"       -> lex' |> add_token Const |> Result.ok
+        | "if"          -> lex' |> add_token If |> Result.ok
+        | "else"        -> lex' |> add_token Else |> Result.ok
+        | "for"         -> lex' |> add_token For |> Result.ok
+        | "while"       -> lex' |> add_token While |> Result.ok
+        | "loop"        -> lex' |> add_token Loop |> Result.ok
+        | "match"       -> lex' |> add_token Match |> Result.ok
+        | "break"       -> lex' |> add_token Break |> Result.ok
+        | "continue"    -> lex' |> add_token Continue |> Result.ok
+        | "return"      -> lex' |> add_token Return |> Result.ok
+        | "in"          -> lex' |> add_token In |> Result.ok
+        | "as"          -> lex' |> add_token As |> Result.ok
+        | _             -> lex' |> add_identifier_token |> Result.ok
     
 let read_number lex c = 
     if c = '0' then
