@@ -24,6 +24,7 @@ type token_kind =
 | Return
 | In
 | As
+| Unit
 | LeftParen
 | RightParen
 | LeftBrace
