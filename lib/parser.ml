@@ -22,7 +22,7 @@ let peek_next par =
     | _ -> failwith "the parser cannot be empty."
 
 let is_at_end par =
-    let token = peek par in token.kind <> EOF
+    (peek par).kind <> EOF
 
 let advance par =
     match par.tokens with
@@ -83,52 +83,53 @@ let rec expr_bp min_bp par =
     let (tok, par') = next par in 
     let lhs = match tok.kind with
     (* Literals *)
-    | IntLiteral value      -> Ok (Literal (LitInt value))
-    | FloatLiteral value    -> Ok (Literal (LitFloat value))
-    | CharLiteral c         -> Ok (Literal (LitChar c))
-    | StringLiteral str     -> Ok (Literal (LitString str))
-    | True                  -> Ok (Literal (LitBool true))
-    | False                 -> Ok (Literal (LitBool false))
+    | IntLiteral value      -> Ok (Literal (LitInt value), par')
+    | FloatLiteral value    -> Ok (Literal (LitFloat value), par')
+    | CharLiteral c         -> Ok (Literal (LitChar c), par')
+    | StringLiteral str     -> Ok (Literal (LitString str), par')
+    | True                  -> Ok (Literal (LitBool true), par')
+    | False                 -> Ok (Literal (LitBool false), par')
     (* Identifier *)
-    | Identifier str        -> Ok (Identifier str)
+    | Identifier str        -> Ok (Identifier str, par')
     (* Prefix Operators *)
     | Minus                 -> let rhs = par' |> expr_bp (prefix_bp Neg) in
                                     (match rhs with
                                     | Error e -> Error e
-                                    | Ok rhs' -> Ok (Unary ({op = Neg; rhs = rhs'})))
+                                    | Ok (rhs', par'') -> Ok (Unary ({op = Neg; rhs = rhs'}), par''))
                                    
     | Exclaim               -> let rhs = par' |> expr_bp (prefix_bp Not) in
                                     (match rhs with
                                     | Error e -> Error e
-                                    | Ok rhs' -> Ok (Unary ({op = Not; rhs = rhs'})))
+                                    | Ok (rhs', par'') -> Ok (Unary ({op = Not; rhs = rhs'}), par''))
     (* Invalid Token *)             
-    | _                     -> Error("unsupported token in language.") in
+    | _                     -> Error("unsupported token in language.", tok, par') in
     (* Infix Operators *)
     match lhs with 
     | Error e -> Error e
-    | Ok lhs' -> loop lhs' min_bp par'
+    | Ok (lhs', par'') -> loop lhs' min_bp par''
 
 and loop lhs min_bp par =
-    match (peek par).kind with 
-    | EOF   -> Ok (lhs)
+    let tok = peek par in 
+    match tok.kind with 
+    | EOF   -> Ok (lhs, par)
     | kind  -> begin 
                 match par |> get_binary_op kind with
-                | None       -> Error("unsupported token in language.")
+                | None       -> Error("unsupported token in language.", tok, par)
                 | Some op    -> begin
                                     match infix_bp op with
-                                    | None      -> Ok (lhs)
+                                    | None      -> Ok (lhs, par)
                                     | Some (left_bp, right_bp) ->
-                                        if left_bp < min_bp then Ok (lhs)
+                                        if left_bp < min_bp then Ok (lhs, par)
                                         else
                                             let (_, par') = next par in
-                                            let rhs = par' |> expr_bp right_bp in
+                                            let res = par' |> expr_bp right_bp in
                                             begin 
-                                                match rhs with
+                                                match res with
                                                 | Error e   -> Error e
-                                                | Ok rhs'   -> let lhs' = Binary ({lhs = lhs; op = op; rhs = rhs'}) in
-                                                                match par' |> loop lhs' min_bp with
+                                                | Ok (rhs, par'')   -> let lhs' = Binary ({lhs = lhs; op = op; rhs = rhs}) in
+                                                                match par'' |> loop lhs' min_bp with
                                                                 | Error e -> Error e
-                                                                | Ok lhs'' -> Ok lhs''
+                                                                | Ok (lhs'', par''') -> Ok (lhs'', par''')
                                             end
                                 end
                                             
@@ -136,10 +137,5 @@ and loop lhs min_bp par =
                 end
 
 let expr par =
-    match par |> expr_bp 0 with 
-    | Error e -> Error e
-    | Ok expr -> Ok expr
+    par |> expr_bp 0 
 
-
-
-  
