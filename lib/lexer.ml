@@ -76,25 +76,25 @@ let add_token kind lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
     let token = { kind = kind; lexeme = text; pos = lex.pos } in
-    { lex with tokens = token :: lex.tokens}
+    { lex with tokens = token :: lex.tokens }
 
 let add_int_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
     let token = { kind = (IntLiteral (Int64.of_string text)); lexeme = text; pos = lex.pos } in
-        { lex with tokens = token :: lex.tokens}
+        { lex with tokens = token :: lex.tokens }
 
 let add_float_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
     let token = { kind = (FloatLiteral (float_of_string text)); lexeme = text; pos = lex.pos } in
-        { lex with tokens = token :: lex.tokens}
+        { lex with tokens = token :: lex.tokens }
 
 let add_identifier_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
     let token = { kind = (Identifier text); lexeme = text; pos = lex.pos } in
-        { lex with tokens = token :: lex.tokens}
+        { lex with tokens = token :: lex.tokens }
 
 let rec read_line_comment lex = 
     if peek lex = Some '\n' || is_at_end lex then lex
@@ -342,6 +342,8 @@ let read_token lex =
     | '}' -> lex |> add_token RightBrace
     | '[' -> lex |> add_token LeftBracket
     | ']' -> lex |> add_token RightBracket 
+    | ',' -> lex |> add_token Comma
+    | ':' -> lex |> add_token Colon
     | ' ' | '\r'  | '\t' | '\n' -> lex (* skip these characters, return same lexer state *)
     (* Operators *)
     | '<' -> (match peek lex with

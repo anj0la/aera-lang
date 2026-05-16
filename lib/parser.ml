@@ -139,3 +139,58 @@ and loop lhs min_bp par =
 let expr par =
     par |> expr_bp 0 
 
+    type let_stmt = { 
+    name: string;
+    typ: typ option;
+    expr: expr option;
+}
+
+let item par = par
+
+let let_stmt par = par
+
+let const_stmt par = par
+
+std::unique_ptr<Stmt> Parser::expression_statement() {
+		auto expr = expression();
+
+		if (!expr) {
+			return nullptr; // error already reported, propagate
+		}
+
+		if (!match(TokenType::Newline) && !match(TokenType::Semicolon)) {
+			error("expected newline or ';' after expression");
+			return nullptr;
+		}
+
+		return std::make_unique<ExprStmt>(std::move(expr));
+	}
+
+let expr_stmt par = 
+    match expr par with 
+    | Error (msg, tok, par') -> 
+    | Ok (expr, par) -> 
+
+let expr_stmtt par = match expr par with
+                | Error e -> Error e 
+                | Ok expr -> Ok expr
+
+let stmt par =
+    if is_at_end par then 
+        par
+    else match (peek par).kind with
+    | Fn        -> item par (* would also include structs, etc... *)
+    | Let       -> let_stmt par
+    | Const     -> const_stmt par
+    | _         -> expr_stmt par
+  
+
+
+
+
+
+type const_stmt = {
+    name: string;
+    typ: typ option;
+    expr: expr;
+}

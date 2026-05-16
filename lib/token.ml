@@ -33,7 +33,6 @@ type token_kind =
 | RightBracket
 | Comma
 | Period
-| Semicolon
 | Colon
 | Grave
 | Newline
