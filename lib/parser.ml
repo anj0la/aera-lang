@@ -151,24 +151,10 @@ let let_stmt par = par
 
 let const_stmt par = par
 
-std::unique_ptr<Stmt> Parser::expression_statement() {
-		auto expr = expression();
 
-		if (!expr) {
-			return nullptr; // error already reported, propagate
-		}
-
-		if (!match(TokenType::Newline) && !match(TokenType::Semicolon)) {
-			error("expected newline or ';' after expression");
-			return nullptr;
-		}
-
-		return std::make_unique<ExprStmt>(std::move(expr));
-	}
-
-let expr_stmt par = 
+(* let expr_stmt par = 
     match expr par with 
-    | Error (msg, tok, par') -> 
+    | Error (msg, tok, par') -> par'
     | Ok (expr, par) -> 
 
 let expr_stmtt par = match expr par with
@@ -186,11 +172,8 @@ let stmt par =
   
 
 
-
-
-
 type const_stmt = {
     name: string;
     typ: typ option;
     expr: expr;
-}
+}*)

@@ -344,6 +344,7 @@ let read_token lex =
     | ']' -> lex |> add_token RightBracket 
     | ',' -> lex |> add_token Comma
     | ':' -> lex |> add_token Colon
+    | '.' -> lex |> add_token Period
     | ' ' | '\r'  | '\t' | '\n' -> lex (* skip these characters, return same lexer state *)
     (* Operators *)
     | '<' -> (match peek lex with
@@ -425,4 +426,5 @@ let rec read_tokens lex =
     if is_at_end lex then
         { lex with tokens = List.rev (add_token EOF lex).tokens }
     else
+        let lex = { lex with start = lex.curr } in
         read_tokens (read_token lex)
