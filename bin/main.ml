@@ -10,6 +10,7 @@ let token_to_string kind = (* turn into a proper module *)
   | Token.Let					-> "let"
   | Token.Fn					-> "fn"
   | Token.Equal					-> "="
+  | Token.Illegal				-> "illegal"
   | _							-> ""
   (* etc *)
 	

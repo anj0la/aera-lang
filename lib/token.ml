@@ -34,8 +34,6 @@ type token_kind =
 | Comma
 | Period
 | Colon
-| Grave
-| Newline
 | LessLessEqual
 | GreaterGreaterEqual
 | PeriodPeriodEqual
