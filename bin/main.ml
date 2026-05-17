@@ -14,7 +14,7 @@ let token_to_string kind =
   (* etc *)
 	
 let () = let lex: Lexer.lexer = {
-	source = "let x = 'c'";
+	source = "let x = \"hello world\"";
 	start = 0;
 	curr = 0;
 	pos = { line = 1; col = 1 };
