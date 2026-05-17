@@ -1,6 +1,6 @@
 open Aera
 
-let token_to_string kind =
+let token_to_string kind = (* turn into a proper module *)
   match kind with
   | Token.IntLiteral num 		-> Printf.sprintf "int(%Ld)" num
   | Token.FloatLiteral num		-> Printf.sprintf "float(%f)" num
@@ -14,7 +14,7 @@ let token_to_string kind =
   (* etc *)
 	
 let () = let lex: Lexer.lexer = {
-	source = "let x = \"hello world\"";
+	source = "let x = 5";
 	start = 0;
 	curr = 0;
 	pos = { line = 1; col = 1 };
@@ -22,4 +22,4 @@ let () = let lex: Lexer.lexer = {
 	reporter = { errors = [] };
 	}
 	in let lex' = Lexer.read_tokens lex in
-List.iter (fun tok -> print_endline (token_to_string tok.Token.kind)) lex'.tokens
+	List.iter (fun tok -> print_endline (token_to_string tok.Token.kind)) lex'.tokens
