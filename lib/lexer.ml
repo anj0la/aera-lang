@@ -140,7 +140,7 @@ let rec skip_until_closing_quote lex quote =
         skip_until_closing_quote lex' quote
 
 let close_char lex c = 
-    if peek lex != Some '\'' then
+    if peek lex <> Some '\'' then
         if is_at_end lex then Error ("unterminated character literal", lex)
         else
             let lex' = skip_until_closing_quote lex '\'' in

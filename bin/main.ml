@@ -13,8 +13,11 @@ let token_to_string kind = (* turn into a proper module *)
   | _							-> ""
   (* etc *)
 	
+let error_to_string e =
+  Printf.sprintf "error at line %d col %d: %s" e.Error.pos.line e.Error.pos.col e.Error.msg
+
 let () = let lex: Lexer.lexer = {
-	source = "let x = 5";
+	source = "let x = 'c'";
 	start = 0;
 	curr = 0;
 	pos = { line = 1; col = 1 };
@@ -22,4 +25,5 @@ let () = let lex: Lexer.lexer = {
 	reporter = { errors = [] };
 	}
 	in let lex' = Lexer.read_tokens lex in
+	List.iter (fun e -> print_endline (error_to_string e)) lex'.reporter.errors;
 	List.iter (fun tok -> print_endline (token_to_string tok.Token.kind)) lex'.tokens
