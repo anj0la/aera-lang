@@ -8,6 +8,7 @@ let make_lexer source = {
   Lexer.source;
   start = 0;
   curr = 0;
+  start_pos = { line = 1; col = 1 };
 	pos = { line = 1; col = 1 };
   tokens = [];
   reporter = { Error.errors = [] };
@@ -103,8 +104,8 @@ let int_lit num line col                    = make_token (Token.IntLiteral num) 
 let float_lit num line col                  = make_token (Token.FloatLiteral num) (string_of_float num) line col
 let char_lit char line col                  = make_token (Token.CharLiteral char) (String.make 1 char) line col
 let str_lit str line col                    = make_token (Token.StringLiteral str) str line col
-let true_ line col                          = make_token Token.True "true" line col
-let false_ line col                         = make_token Token.True "false" line col
+let true_lit line col                          = make_token Token.True "true" line col
+let false_lit line col                         = make_token Token.True "false" line col
 let fn line col                             = make_token Token.Fn "fn" line col
 let let_ line col                           = make_token Token.Let "let" line col
 let mut line col                            = make_token Token.Mut "mut" line col

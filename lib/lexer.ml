@@ -7,6 +7,7 @@ type lexer = {
     source: string;
     start: int;
     curr: int;
+    start_pos: position; (* points to the STARTING position of the token *)
     pos: position;
     tokens: token list;
     reporter: reporter;
@@ -72,28 +73,39 @@ let advance lex =
 
 let bump lex = { lex with curr = lex.curr + 1 } (* moves the current pointer by one, ONLY returns the updated lexer state, NOT the character *)
 
+let add_eof_token lex =
+    let token = { kind = EOF; lexeme = ""; pos = lex.pos } in 
+    { lex with tokens = token :: lex.tokens }
+
+let add_token_at_pos pos kind lex = 
+    let text = 
+        String.sub lex.source lex.start (lex.curr - lex.start) in
+    let token = { kind = kind; lexeme = text; pos = pos } in
+    { lex with tokens = token :: lex.tokens }
+
+
 let add_token kind lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    let token = { kind = kind; lexeme = text; pos = lex.pos } in
+    let token = { kind = kind; lexeme = text; pos = lex.start_pos } in
     { lex with tokens = token :: lex.tokens }
 
 let add_int_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    let token = { kind = (IntLiteral (Int64.of_string text)); lexeme = text; pos = lex.pos } in
+    let token = { kind = (IntLiteral (Int64.of_string text)); lexeme = text; pos = lex.start_pos } in
         { lex with tokens = token :: lex.tokens }
 
 let add_float_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    let token = { kind = (FloatLiteral (float_of_string text)); lexeme = text; pos = lex.pos } in
+    let token = { kind = (FloatLiteral (float_of_string text)); lexeme = text; pos = lex.start_pos } in
         { lex with tokens = token :: lex.tokens }
 
 let add_identifier_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    let token = { kind = (Identifier text); lexeme = text; pos = lex.pos } in
+    let token = { kind = (Identifier text); lexeme = text; pos = lex.start_pos } in
         { lex with tokens = token :: lex.tokens }
 
 let rec read_line_comment lex = 
@@ -424,7 +436,7 @@ let read_token lex =
         
 let rec read_tokens lex =
     if is_at_end lex then
-        { lex with tokens = List.rev (add_token EOF lex).tokens }
+        { lex with tokens = List.rev (add_eof_token lex).tokens }
     else
-        let lex = { lex with start = lex.curr } in
+        let lex = { lex with start = lex.curr; start_pos = lex.pos } in
         read_tokens (read_token lex)
