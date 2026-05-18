@@ -20,7 +20,7 @@ fn function_name(param1: type, param2: type) -> return_type {
 }
 
 # example of a simple function
-fn count(n: int32) -> () { # unit type returns nothing
+fn count(n: int32) -> unit { # unit type returns nothing
     for i in 0..n {
         println(i)
     }

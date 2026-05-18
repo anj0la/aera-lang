@@ -64,7 +64,7 @@ Unlike other languages, Aera does not provide a do-while loop, where the loop is
 
 ```aera
 if true { # always will run 
-    do_something();
+    do_something()
 }
 
 while cond { # may not run if cond == false
@@ -142,7 +142,7 @@ while cond {
 
     if cond {
        break # break out of the while loop
-     }
+    }
 }
 ```
 
@@ -156,7 +156,7 @@ while cond {
 
     if cond {
        continue # skip current iteration
-     }
+    }
 }
 ```
 
@@ -167,11 +167,11 @@ The `return` expression exits a function and returns a value.
 ```aera
 for i in 0..10 {
     if cond {
-      return true
+      return true # can omit the return keyword
     }
 }
 
-return false
+return false # can omit the return keyword
 ```
 
 
