@@ -165,6 +165,16 @@ let test_long_char () =
         eof 1 13;
     ]
 
+let test_invalid_char () = 
+    let tokens = lex_string "let x = $" in
+    Test_lexer_helper.expect_tokens tokens [
+        let_ 1 1;
+        identifier "x" 1 5;
+        equal 1 7;
+        illegal "$" 1 9;
+        eof 1 10;
+    ]
+
 (* Integers *)
 
 let test_binary_int () = 
@@ -245,7 +255,7 @@ let test_float_sci_neg () =
         let_ 1 1;
         identifier "lr" 1 5;
         equal 1 8;
-        float_lit 2.7e+5 1 10;
+        float_lit 0.1e-5 1 10;
         eof 1 16;
     ]
 
@@ -253,7 +263,7 @@ let test_float_trailing_dot () =
     let tokens = lex_string "let pi = 3." in
     Test_lexer_helper.expect_tokens tokens [
         let_ 1 1;
-        identifier "lr" 1 5;
+        identifier "pi" 1 5;
         equal 1 8;
         float_lit 3. 1 10;
         eof 1 12;
@@ -263,10 +273,20 @@ let test_malformed_number_extra_dot () =
     let tokens = lex_string "let pi = 3.14." in
     Test_lexer_helper.expect_tokens tokens [
         let_ 1 1;
-        identifier "lr" 1 5;
+        identifier "pi" 1 5;
         equal 1 8;
         illegal "3.14." 1 10;
         eof 1 15;
+    ]
+
+let test_malformed_sci () = 
+    let tokens = lex_string "let lr = 0.1e-5." in 
+    Test_lexer_helper.expect_tokens tokens [
+        let_ 1 1;
+        identifier "lr" 1 5;
+        equal 1 8;
+        illegal "0.1e-5." 1 10;
+        eof 1 17;
     ]
 
 (* Comments *)
@@ -311,18 +331,6 @@ let test_malformed_block_comment () =
         eof 1 30;
     ]
 
-(* Errors *)
-
-let test_invalid_char () = 
-    let tokens = lex_string "let x = $" in
-    Test_lexer_helper.expect_tokens tokens [
-        let_ 1 1;
-        identifier "x" 1 5;
-        equal 1 7;
-        illegal "$" 1 9;
-        eof 1 10;
-    ]
-
 (* Multi-Line -> will do later *)
 
 let () =
@@ -346,6 +354,7 @@ let () =
         Alcotest.test_case "escaped character" `Quick test_escaped_character;
         Alcotest.test_case "empty char" `Quick test_empty_char;
         Alcotest.test_case "long char" `Quick test_long_char;
+        Alcotest.test_case "invalid char" `Quick test_invalid_char;
     ]);
     ("integers", [
         Alcotest.test_case "binary int" `Quick test_binary_int;
@@ -360,6 +369,7 @@ let () =
         Alcotest.test_case "float scientific negative" `Quick test_float_sci_neg;
         Alcotest.test_case "float trailing dot" `Quick test_float_trailing_dot;
         Alcotest.test_case "malformed number extra dot" `Quick test_malformed_number_extra_dot;
+        Alcotest.test_case "malformed scientific number" `Quick test_malformed_sci;
     ]);
     ("comments", [
         Alcotest.test_case "line comment" `Quick test_line_comment;
@@ -367,8 +377,5 @@ let () =
         Alcotest.test_case "comment ignored" `Quick test_comment_ignored;
         Alcotest.test_case "unterminated block comment" `Quick test_unterminated_block_comment;
         Alcotest.test_case "malformed block comment" `Quick test_malformed_block_comment;
-    ]);
-    ("errors", [
-        Alcotest.test_case "invalid char" `Quick test_invalid_char;
     ]);
   ]

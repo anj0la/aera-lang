@@ -71,7 +71,7 @@ let advance lex =
                     curr = lex.curr + 1;
                     pos = { lex.pos with col = lex.pos.col + 1 }; })
 
-let bump lex = { lex with curr = lex.curr + 1 } (* moves the current pointer by one, ONLY returns the updated lexer state, NOT the character *)
+let bump lex = { lex with curr = lex.curr + 1; pos = { lex.pos with col = lex.pos.col + 1 } } (* moves the current pointer by one, ONLY returns the updated lexer state, NOT the character *)
 
 let add_eof_token lex =
     let token = { kind = EOF; lexeme = ""; pos = lex.pos } in 
@@ -190,6 +190,7 @@ let rec read_string lex buf =
                 | 'r'   -> read_string lex'' (buf ^ String.make 1 '\r')
                 | '/'   -> read_string lex'' (buf ^ String.make 1 '/')
                 | '\''  -> read_string lex'' (buf ^ String.make 1 '\'')
+                | '\\'  -> read_string lex'' (buf ^ String.make 1 '\\')
                 | '"'   -> read_string lex'' (buf ^ String.make 1 '"')
                 | _     -> let lex''' = skip_until_closing_quote lex'' '"' in
                         Error ("invalid escape sequence", lex''')
@@ -275,6 +276,8 @@ let rec read_decimal_number_helper lex is_float =
         read_decimal_number_helper lex' is_float
     | Some '.' -> if peek_next lex = Some '.' then
             Ok (lex, is_float) (* main loop handles range operator .. *)
+        else if is_float then
+            Ok (lex, is_float) (* already have a dot, let is_valid_fractional_part handle the error *)
         else let (_, lex') = advance lex in (* fractional part*)
             read_decimal_number_helper lex' true
     | Some 'e' | Some 'E' ->  (* scientific part *)
@@ -433,8 +436,9 @@ let read_token lex =
     | c when is_alpha c -> (match read_identifier lex with
         | Ok lex -> lex
         | Error (msg, lex) -> let lex = { lex with reporter = add_error lex.pos msg lex.reporter } in add_token Illegal lex)
-    (* Default case, return the same lexer *)
-    | _ -> lex
+    (* Character not supported in language, report error *)
+    | _ -> let msg = "unexpected character '" ^ String.make 1 c ^ String.make 1 '\'' in
+            let lex = { lex with reporter = add_error lex.pos msg lex.reporter } in add_token Illegal lex
         
 let rec read_tokens lex =
     if is_at_end lex then
