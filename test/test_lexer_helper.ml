@@ -23,15 +23,15 @@ let make_token kind lexeme line col =   { Token.kind; lexeme; pos = { line; col 
 
 let token_to_string kind =
   match kind with
-  | Token.Identifier str 	    -> Printf.sprintf "identifier(%s)" str
-  | IntLiteral num 		        -> Printf.sprintf "int(%Ld)" num
-  | FloatLiteral num		      -> Printf.sprintf "float(%f)" num
-  | CharLiteral ch		        -> Printf.sprintf "char(%c)" ch
-  | StringLiteral str		      -> Printf.sprintf "str(%s)" str
+  | Token.Identifier str      -> Printf.sprintf "identifier(%s)" str
+  | IntLiteral num            -> Printf.sprintf "int(%Ld)" num
+  | FloatLiteral num          -> Printf.sprintf "float(%f)" num
+  | CharLiteral c             -> Printf.sprintf "char(%c)" c
+  | StringLiteral str         -> Printf.sprintf "str(%s)" str
   | True                      -> Printf.sprintf "bool(%b)" true
   | False                     -> Printf.sprintf "bool(%b)" false
-  | Fn					              -> "fn"
-  | Let					              -> "let"
+  | Fn                        -> "fn"
+  | Let                       -> "let"
   | Mut                       -> "mut"
   | Const                     -> "const"
   | If                        -> "if"
@@ -100,8 +100,8 @@ let token_to_string kind =
 (* Shortcut constructors *)
 
 let identifier str line col                 = make_token (Token.Identifier str) str line col
-let int_lit num line col                    = make_token (Token.IntLiteral num) (Int64.to_string num) line col
-let float_lit num line col                  = make_token (Token.FloatLiteral num) (string_of_float num) line col
+let int_lit num lexeme line col             = make_token (Token.IntLiteral num) lexeme line col
+let float_lit num lexeme line col           = make_token (Token.FloatLiteral num) lexeme line col
 let char_lit char line col                  = make_token (Token.CharLiteral char) (String.make 1 char) line col
 let str_lit str line col                    = make_token (Token.StringLiteral str) str line col
 let true_lit line col                       = make_token Token.True "true" line col
@@ -170,20 +170,22 @@ let less line col                           = make_token Token.Less "<" line col
 let greater line col                        = make_token Token.Greater ">" line col
 let equal line col                          = make_token Token.Equal "=" line col
 let illegal lexeme line col                 = make_token Token.Illegal lexeme line col
-let eof line col                            = make_token Token.EOF "eof" line col
+let eof line col                            = make_token Token.EOF "" line col
 
 let token_equal a b =
-  a.Token.kind = b.Token.kind &&
-  a.Token.pos.line = b.Token.pos.line &&
-  a.Token.pos.col = b.Token.pos.col
+    a.Token.kind = b.Token.kind &&
+    a.Token.lexeme = b.Token.lexeme &&
+    a.Token.pos.line = b.Token.pos.line &&
+    a.Token.pos.col = b.Token.pos.col
 
 let token_pp fmt tok =
-  Format.fprintf fmt "%s at %d:%d"
-    (token_to_string tok.Token.kind)
-    tok.Token.pos.line
-    tok.Token.pos.col
+    Format.fprintf fmt "%s at %d:%d with lexeme: %s"
+        (token_to_string tok.Token.kind)
+        tok.Token.pos.line
+        tok.Token.pos.col
+        tok.Token.lexeme
 
 let token_testable = Alcotest.testable token_pp token_equal
 
 let expect_tokens actual expected =
-  Alcotest.(check (list token_testable)) "tokens" expected actual
+    Alcotest.(check (list token_testable)) "tokens" expected actual

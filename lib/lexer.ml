@@ -77,17 +77,18 @@ let add_eof_token lex =
     let token = { kind = EOF; lexeme = ""; pos = lex.pos } in 
     { lex with tokens = token :: lex.tokens }
 
-let add_token_at_pos pos kind lex = 
-    let text = 
-        String.sub lex.source lex.start (lex.curr - lex.start) in
-    let token = { kind = kind; lexeme = text; pos = pos } in
-    { lex with tokens = token :: lex.tokens }
-
-
 let add_token kind lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
     let token = { kind = kind; lexeme = text; pos = lex.start_pos } in
+    { lex with tokens = token :: lex.tokens }
+
+let add_char_token c lex =
+    let token = { kind = (CharLiteral c); lexeme = String.make 1 c; pos = lex.start_pos } in 
+    { lex with tokens = token :: lex.tokens }
+
+let add_string_token buf lex =
+    let token = { kind = (StringLiteral buf); lexeme = buf; pos = lex.start_pos } in 
     { lex with tokens = token :: lex.tokens }
 
 let add_int_token lex =
@@ -171,12 +172,12 @@ let read_char lex =
         | Ok (c', lex'') -> 
             match close_char lex'' c' with
             | Error e -> Error e
-            | Ok (final_c, lex''') -> lex''' |> add_token (CharLiteral final_c) |> Result.ok (* returns updated lex with tokens updated *)
+            | Ok (final_c, lex''') -> lex''' |> add_char_token final_c |> Result.ok (* returns updated lex with tokens updated *)
 
 let rec read_string lex buf =
     if is_at_end lex then Error ("unterminated string literal", lex)
     else if peek lex = Some '"' then
-        let (_, lex') = advance lex in lex' |> add_token (StringLiteral buf) |> Result.ok
+        let (_, lex') = advance lex in lex' |> add_string_token buf |> Result.ok
     else
         let (c, lex') = advance lex in
         if c = '\\' then
