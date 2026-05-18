@@ -384,6 +384,7 @@ let read_token lex =
 
     | '-' -> (match peek lex with 
             | Some '=' -> lex |> bump |> add_token MinusEqual
+            | Some '>' -> lex |> bump |> add_token MinusGreater (* issue here *)
             | _ -> lex |> add_token Minus)       
     | '*' -> (match peek lex with 
             | Some '=' -> lex |> bump |> add_token StarEqual
@@ -399,6 +400,7 @@ let read_token lex =
             | _ -> lex |> add_token Exclaim)
     | '=' -> (match peek lex with 
             | Some '=' -> lex |> bump |> add_token EqualEqual
+            | Some '>' -> lex |> bump |> add_token EqualGreater (* issue here *)
             | _ -> lex |> add_token Equal)
     | '&' -> (match peek lex with 
             | Some '&' -> lex |> bump |> add_token AmpAmp
