@@ -331,7 +331,97 @@ let test_malformed_block_comment () =
         eof 1 30;
     ]
 
-(* Multi-Line -> will do later *)
+(* Multi-Line *)
+
+let test_hello_world () = 
+    let input = {|fn main() {
+    print("Hello world")
+}
+|} in
+    let tokens = lex_string input in 
+    Test_lexer_helper.expect_tokens tokens [
+        fn 1 1;
+        identifier "main" 1 4;
+        left_paren 1 8;
+        right_paren 1 9;
+        left_brace 1 11;
+        identifier "print" 2 5;
+        left_paren 2 10;
+        str_lit "Hello world" 2 11;
+        right_paren 2 24;
+        right_brace 3 1;
+        eof 4 1;
+    ]
+
+let test_fn_and_loop () = 
+    let input = {|fn main() {
+    let ans = sum(5)
+    print(ans)
+}
+
+fn sum(num: int64) -> int64 {
+    let mut total: int64 = 0
+    for i in 0..num {
+        total += i
+    }
+    return total
+}
+|} in
+    let tokens = lex_string input in 
+    Test_lexer_helper.expect_tokens tokens [
+        (* main function *)
+        fn 1 1;
+        identifier "main" 1 4;
+        left_paren 1 8;
+        right_paren 1 9;
+        left_brace 1 11;
+        let_ 2 5;
+        identifier "ans" 2 9;
+        equal 2 13;
+        identifier "sum" 2 15;
+        left_paren 2 18;
+        int_lit 5L 2 19;
+        right_paren 2 20;
+        identifier "print" 3 5;
+        left_paren 3 10;
+        identifier "ans" 3 11;
+        right_paren 3 14;
+        right_brace 4 1;
+
+        (* sum function *)
+        fn 6 1;
+        identifier "sum" 6 4;
+        left_paren 6 7;
+        identifier "num" 6 8;
+        colon 6 11;
+        identifier "int64" 6 13;
+        right_paren 6 18;
+        minus_greater 6 20;
+        identifier "int64" 6 23;
+        left_brace 6 29;
+        let_ 7 5;
+        mut 7 9;
+        identifier "total" 7 13;
+        colon 7 18;
+        identifier "int64" 7 20;
+        equal 7 26;
+        int_lit 0L 7 28;
+        for_ 8 5;
+        identifier "i" 8 9;
+        in_ 8 11;
+        int_lit 0L 8 14;
+        period_period 8 15;
+        identifier "num" 8 17;
+        left_brace 8 21;
+        identifier "total" 9 9 ;
+        plus_equal 9 15;
+        identifier "i" 9 18;
+        right_brace 10 5;
+        return_ 11 5;
+        identifier "total" 11 12;
+        right_brace 12 1;
+        eof 13 1;
+    ]
 
 let () =
   Alcotest.run "Lexer" [
@@ -377,5 +467,9 @@ let () =
         Alcotest.test_case "comment ignored" `Quick test_comment_ignored;
         Alcotest.test_case "unterminated block comment" `Quick test_unterminated_block_comment;
         Alcotest.test_case "malformed block comment" `Quick test_malformed_block_comment;
+    ]);
+    ("multi-line", [
+        Alcotest.test_case "hello world" `Quick test_hello_world;
+        Alcotest.test_case "sum function" `Quick test_fn_and_loop;
     ]);
   ]

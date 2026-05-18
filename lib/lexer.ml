@@ -359,7 +359,6 @@ let read_token lex =
     | ']' -> lex |> add_token RightBracket 
     | ',' -> lex |> add_token Comma
     | ':' -> lex |> add_token Colon
-    | '.' -> lex |> add_token Period
     | ' ' | '\r'  | '\t' | '\n' -> lex (* skip these characters, return same lexer state *)
     (* Operators *)
     | '<' -> (match peek lex with
@@ -381,6 +380,12 @@ let read_token lex =
             | Some '=' -> lex |> bump |> add_token GreaterEqual (* we already looked at >>= / >>, now we look for >=, otherwise >*)
             | _ -> lex |> add_token Greater
             ) 
+    | '.' -> (match peek lex with
+            | Some '.' -> let lex' = bump lex in (* looking now at .. *)
+                (match peek lex' with
+                | Some '=' -> lex' |> bump |> add_token PeriodPeriodEqual (* ..= *)
+                | _ -> lex' |> add_token PeriodPeriod) (* .. *) 
+            | _ -> lex |> add_token Period) 
     | '+' -> (match peek lex with 
             | Some '=' -> lex |> bump |> add_token PlusEqual
             | _ -> lex |> add_token Plus)     
