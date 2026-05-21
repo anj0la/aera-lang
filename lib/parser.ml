@@ -38,18 +38,6 @@ let check kind par =
     else
         let token = peek par in token.kind = kind
 
-let check_next kind par =  (* checks that there is NO token after EOF *)
-    if is_at_end par then
-        false
-    else
-        let token = peek_next par in token.kind = kind
-
-let consume kind par = 
-    if check kind par then 
-        Some (advance par)
-    else
-        None
-
 (* Expressions *)
     
 let prefix_bp op =
@@ -125,8 +113,8 @@ and loop lhs min_bp par =
                                             let res = par' |> expr_bp right_bp in
                                             begin 
                                                 match res with
-                                                | Error e   -> Error e
-                                                | Ok (rhs, par'')   -> let lhs' = Binary ({lhs = lhs; op = op; rhs = rhs}) in
+                                                | Error e -> Error e
+                                                | Ok (rhs, par'') -> let lhs' = Binary ({lhs = lhs; op = op; rhs = rhs}) in
                                                                 match par'' |> loop lhs' min_bp with
                                                                 | Error e -> Error e
                                                                 | Ok (lhs'', par''') -> Ok (lhs'', par''')
@@ -139,41 +127,115 @@ and loop lhs min_bp par =
 let expr par =
     par |> expr_bp 0 
 
-    type let_stmt = { 
-    name: string;
-    typ: typ option;
-    expr: expr option;
-}
 
-let item par = par
+(* Statements *)
 
-let let_stmt par = par
-
-let const_stmt par = par
+let expect_identifier par =
+    let (tok, par') = next par in
+    match tok.kind with 
+    | Identifier str        -> Ok(str, par')
+    | _                     -> Error ("expected identifier name", tok, par)
 
 
-(* let expr_stmt par = 
+let parse_type par =
+    let (_, par') = next par in (* consume : token *)
+    match expect_identifier par' with (* consume type -> identifier in parser*)
+    | Error e -> Error e
+    | Ok (typ, par'') -> Ok (typ, par'')
+
+
+let parse_expr par = 
+    let (_, par') = next par in (* consume = token *)
+    match expr par' with 
+    | Error e -> Error e
+    | Ok (expr', par') -> Ok (expr', par')
+
+let let_stmt par =
+    match expect_identifier par with (* advance to the next token *)
+    | Error e -> Error e
+    | Ok (name, par') -> 
+        begin
+            match (peek par').kind with 
+            | Colon ->  begin 
+                            match parse_type par' with
+                            | Error e -> Error e
+                            | Ok (typ, par'') -> begin 
+                                                    match (peek par'').kind with 
+                                                    | Equal -> begin
+                                                                    match parse_expr par'' with 
+                                                                    | Error e -> Error e
+                                                                    | Ok (expr', par''') -> 
+                                                                        Ok (LetStmt { name = name; typ = Some typ; expr = Some expr' }, par''')
+                                                                end
+                                                    | _ -> Ok (LetStmt { name = name; typ = Some typ; expr = None }, par'')
+                                                end
+                        end
+            | Equal -> begin
+                            match parse_expr par' with 
+                            | Error e -> Error e
+                            | Ok (expr', par'') -> Ok (LetStmt { name = name; typ = None; expr = Some expr' }, par'')
+                        end
+            | _ -> Ok (LetStmt { name = name; typ = None; expr = None }, par')
+
+        end
+                        
+let const_stmt par = match expect_identifier par with (* advance to the next token *)
+    | Error e -> Error e
+    | Ok (name, par') -> 
+        let tok = (peek par') in 
+        begin 
+            match tok.kind with 
+            | Colon -> begin 
+                            match parse_type par' with
+                            | Error e -> Error e
+                            | Ok (typ, par'') -> let tok' = (peek par'') in
+                                                    begin 
+                                                        match tok'.kind with 
+                                                        | Equal -> begin
+                                                                        match parse_expr par'' with 
+                                                                        | Error e -> Error e
+                                                                        | Ok (expr', par''') -> 
+                                                                            Ok (ConstStmt { name = name; typ = Some typ; expr = expr' }, par''')
+                                                                    end
+                                                        | _ -> Error ("expected expression after '='", tok', par'')
+                                                    end
+                        end
+            | Equal -> begin
+                            match parse_expr par' with 
+                            | Error e -> Error e
+                            | Ok (expr', par'') -> Ok (ConstStmt { name = name; typ = None; expr = expr' }, par'')
+                        end
+            | _ -> Error ("expected '=' for constant declaration", tok, par')
+        end
+
+
+let expr_stmt par =
     match expr par with 
-    | Error (msg, tok, par') -> par'
-    | Ok (expr, par) -> 
+    | Error e -> Error e
+    | Ok (expr, par) -> Ok (ExprStmt expr, par)
 
-let expr_stmtt par = match expr par with
-                | Error e -> Error e 
-                | Ok expr -> Ok expr
+let stmt par = 
+    match (peek par).kind with
+    | Let -> (match let_stmt par with
+            | Error e -> Error e
+            | Ok (let_stmt, par') -> Ok(let_stmt, par'))
+    | Const -> (match const_stmt par with
+            | Error e -> Error e
+            | Ok (const_stmt, par') -> Ok(const_stmt, par'))       
+    | _  -> (match expr_stmt par with 
+            | Error e -> Error e
+            | Ok (expr_stmt, par') -> Ok(expr_stmt, par'))
 
-let stmt par =
+     
+(* Parse Function *)
+
+let rec parse_helper stmts par = 
     if is_at_end par then 
-        par
-    else match (peek par).kind with
-    | Fn        -> item par (* would also include structs, etc... *)
-    | Let       -> let_stmt par
-    | Const     -> const_stmt par
-    | _         -> expr_stmt par
-  
+        (stmts, par)
+    else
+        match stmt par with 
+        | Error (msg, tok, par') -> (stmts, { par' with reporter = add_error tok.pos msg par'.reporter }) (* need better error handling *)
+        | Ok (stmt, par') -> par' |> parse_helper (stmt :: stmts) 
 
-
-type const_stmt = {
-    name: string;
-    typ: typ option;
-    expr: expr;
-}*)
+let parse par =
+    par |> parse_helper []
