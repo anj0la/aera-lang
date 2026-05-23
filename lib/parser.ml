@@ -102,7 +102,7 @@ and loop lhs min_bp par =
     | EOF   -> Ok (lhs, par)
     | kind  -> begin 
                 match par |> get_binary_op kind with
-                | None       -> Error("unsupported token in language.", tok, par)
+                | None       -> Ok (lhs, par) (* exit early *)
                 | Some op    -> begin
                                     match infix_bp op with
                                     | None      -> Ok (lhs, par)

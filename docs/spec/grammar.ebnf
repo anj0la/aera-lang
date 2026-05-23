@@ -1,7 +1,35 @@
-program = { statement } EOF ;
+program = { item } EOF ;
 
-expression = literal_expression
-            | operator_expression ;
+item = function ;
+
+function = "fn" identifier "(" [parameter_list] ")" ["->", type] block_expression ;
+parameter_list = parameter { "," parameter } ;
+parameter = identifier ":" type ;
+
+expression = expression_with_block
+            | expression_without_block ;
+
+expression_with_block = block_expression
+            | loop_expression
+            | if_expression ;
+    
+expression_without_block = literal_expression
+            | operator_expression
+            | grouped_expression
+            | call_expression
+            | break_expression
+            | continue_expression
+            | range_expression
+            | return_expression ;
+
+block_expression = "{" { statement } expression "}" ;
+loop_expression = infinite_loop_expression;
+            | while_loop_expression ;
+
+infinite_loop_expression = "loop" block_expression ;
+while_loop_expression = "while" expression block_expression ; 
+
+if_expression = "if" expression expression [ "else" expression ] ;
 
 literal_expression = literal ;
 operator_expression = assignment_expression
@@ -32,8 +60,15 @@ logical_expression = expression "&&" expression
 negation_expression = "-" expression
             | "!" expression ;
 
+grouped_expression = "(" expression ")" ;
+call_expression = "(" [ call_params ] ")" ;
+call_params = expression { ","  expression } ;
+break_expression = "break" ;
+continue_expression = "continue" ;
 
-statement =  et_statement
+return_expression = "return" [ expression ] ;
+
+statement = let_statement
             | const_statement
             | expression_statement ;
 
@@ -78,3 +113,7 @@ escape_sequence = "\\" ( "n" | "t" | "r" | "\"" | "'" | "\\" ) ;
 space = " " ;
 
 identifier = ( alpha | "_" ) { ( alpha | digit | "_" ) } ;
+
+type = primitive_type ; 
+
+primitive_type = "int8" | "int16" | "int32" | "int64" | "uint8" | "uint16" | "uint32" | "uint64" | "float32" | "float64" | "char" | "string" | "bool" ; 
