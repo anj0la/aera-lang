@@ -142,25 +142,13 @@ and loop lhs min_bp par =
 
 (* Expressions *)
 
-(* let exprr par = 
-    let tok = peek par
-    in match tok.kind with 
-    | If -> if_expr par
-
-
-    | -> Error ("expected 'if' keyword." tok, par) *)
-
 let rec expr par = (* rename to expr_no_block *)
-    par |> expr_no_block
-
-and expr_no_block par =
-    par |> expr_bp 0
-
-and expr_with_block par =
     let tok = peek par in 
     match tok.kind with
-    | If -> let (_, par') = next par in par |> if_expr (* consume if keyword and parse expression *)
-    | While -> 
+    | If -> let (_, par') = next par in par' |> if_expr (* consume keyword and parse expression *)
+    | While -> let (_, par') = next par in par' |> while_expr 
+    | Loop -> let (_, par') = next par in par' |> loop_expr
+    | _ -> par |> expr_bp 0 (* expression without block *)
 
 and if_expr par = 
     match expr par with  (* parse condition *)
@@ -183,14 +171,22 @@ and if_expr par =
                 end
         end
 
+and while_expr par = 
+    match expr par with  (* parse condition *)
+    | Error e -> Error e
+    | Ok (expr', par') -> 
+        begin
+            match block par' with 
+            | Error e -> Error e
+            | Ok (body, par'') -> Ok (WhileLoop {cond = expr'; body = body;}, par'')
+        end
 
-and while_expr par = ()
-
-and loop_expr par = ()
-
+and loop_expr par = 
+    match block par with 
+    | Error e -> Error e
+    | Ok (expr', par') -> Ok (InfiniteLoop expr', par')
 
 (* Statements *)
-
 
 and parse_expr par = 
     let (_, par') = next par in (* consume = token *)
