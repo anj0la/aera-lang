@@ -2,13 +2,13 @@
 
 > *Where ideas take shape.*
 
-Aera is an expression-oriented programming language centered around clarity and simplicity. There should be little to no friction when designing and writing code.
+Aera is an expression-oriented programming language centered around clarity and simplicity. There should be little to no friction when designing and writing code. Coding in Aera should just *feel* right.
 
-It should just *feel* right.
-
-That's what drove its design for interactive applications like games and GUIs. It sits in the middle between languages that give you too much control and ones that are too slow, taking inspiration from C++, Rust, OCaml, Swift and Go.
+Aera sits in the middle between languages that give you too much control and ones that are too slow, making it the ideal language for game and interactive development.
 
 Aera is statically typed, with automatic memory management. It leans into functional programming concepts like immutable state, algebraic data types, and eventually, more advanced concepts like *effect handlers* and *pure functions*.
+
+Aera takes inspiration from modern C++, Rust, OCaml, Swift and Go.
 
 ## Quick Example
 
