@@ -29,7 +29,7 @@ loop_expression = infinite_loop_expression;
 infinite_loop_expression = "loop" block_expression ;
 while_loop_expression = "while" expression block_expression ; 
 
-if_expression = "if" expression expression [ "else" expression ] ;
+if_expression = "if" expression block [ "else" block ] ;
 
 literal_expression = literal ;
 operator_expression = assignment_expression
@@ -68,13 +68,12 @@ continue_expression = "continue" ;
 
 return_expression = "return" [ expression ] ;
 
-statement = let_statement
-            | const_statement
-            | expression_statement ;
+statement = item
+            | let_statement
+            | const_statement ;
 
 let_statement = "let" identifier [ ":" type ] [ "=" expression ] ;
 const_statement = "const" identifier [ ":" type ] "=" expression ;
-expression_statement = expression ;
 
 literal = integer_literal
           | float_literal
