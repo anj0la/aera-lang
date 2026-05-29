@@ -18,8 +18,6 @@ expression_without_block = literal_expression
             | grouped_expression
             | call_expression
             | break_expression
-            | continue_expression
-            | range_expression
             | return_expression ;
 
 block_expression = "{" { statement } expression "}" ;
@@ -29,17 +27,29 @@ loop_expression = infinite_loop_expression;
 infinite_loop_expression = "loop" block_expression ;
 while_loop_expression = "while" expression block_expression ; 
 
-if_expression = "if" expression block [ "else" block ] ;
+if_expression = "if" expression block_expression [ "else" block_expression ] ;
 
 literal_expression = literal ;
 operator_expression = assignment_expression
+            | compound_assignment_expression
             | comparsion_expression
             | arithmetic_expression
+            | bitwise_expression
             | logical_expression
             | negation_expression 
             | type_cast_expression ;
 
 assignment_expression = expression "=" expression ;
+compound_assignment_expression = expression "+=" expression
+            | expression "-=" expression
+            | expression "*=" expression
+            | expression "/=" expression
+            | expression "%=" expression
+            | expression "&=" expression
+            | expression "|=" expression
+            | expression "^=" expression
+            | expression "<<=" expression
+            | expression ">>=" expression ;
 
 comparsion_expression = expression "==" expression
             | expression "!=" expression
@@ -54,6 +64,12 @@ arithmetic_expression = expression "+" expression
             | expression "/" expression
             | expression "%" expression ;
 
+bitwise_expression = expression "&" expression
+            | expression "|" expression
+            | expression "^" expression
+            | expression ">>" expression
+            | expression "<<" expression ;
+
 logical_expression = expression "&&" expression
             | expression "||" expression ;
 
@@ -63,7 +79,7 @@ negation_expression = "-" expression
 grouped_expression = "(" expression ")" ;
 call_expression = "(" [ call_params ] ")" ;
 call_params = expression { ","  expression } ;
-break_expression = "break" ;
+break_expression = "break" [ expression ] ;
 continue_expression = "continue" ;
 
 return_expression = "return" [ expression ] ;

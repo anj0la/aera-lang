@@ -3,12 +3,25 @@ open Token
 (* Basic Operators *)
 
 type binary_op =
+(* Arithmetic *)
 | Add | Sub | Mul | Div | Mod
+(* Comparison *)
 | Eq | Neq | Lt | Lte | Gt | Gte
+(* Logical *)
 | And | Or
+(* Bitwise *)
+| BitAnd | BitOr | BitXor | Shl | Shr
 
 type unary_op =
 | Neg | Not (* - / ! *)
+
+type assign_op =
+(* Reassignment *)
+| EqAssign
+(* Arithmetic *)
+| AddAssign | SubAssign | MulAssign | DivAssign | ModAssign
+(* Bitwise *)
+| AndAssign | PipeAssign | CaretAssign | ShlAssign | ShrAssign
 
 (* Literals *)
 
@@ -40,25 +53,25 @@ and block = {
 }
 
 and expr =
-| Literal      of literal
-| Identifier   of string
-| Grouping     of expr
-| FnCall       of { callee: expr; args: expr list }
-| Binary       of { lhs: expr; op: binary_op; rhs: expr }
-| Unary        of { op: unary_op; rhs: expr }
-| Block        of block
-| InfiniteLoop of expr
-| WhileLoop    of { cond: expr; body: expr }
-| IfExpr       of { cond: expr; then_branch: expr; else_branch: expr option }
-| Break
-| Continue
-| Return       of expr option
+| Literal           of literal
+| Identifier        of string
+| Grouping          of expr
+| FnCall            of { callee: expr; args: expr list }
+| Binary            of { lhs: expr; op: binary_op; rhs: expr }
+| Assign            of { lhs: expr; op: assign_op; rhs: expr }
+| Unary             of { op: unary_op; rhs: expr }
+| Block             of block
+| InfiniteLoop      of expr
+| WhileLoop         of { cond: expr; body: expr }
+| IfExpr            of { cond: expr; then_branch: expr; else_branch: expr option }
+| BreakExpr         of expr option
+| ReturnExpr        of expr option
 
 (* Statements *)
 
 and stmt = 
-| LetStmt      of let_stmt
-| ConstStmt    of const_stmt
+| LetStmt           of let_stmt
+| ConstStmt         of const_stmt
 
 and let_stmt = { 
     name: string;
