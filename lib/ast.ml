@@ -35,12 +35,15 @@ type literal =
 (* Program *)
 
 type program = {
-    stmts: stmt list;
+    items: item list;
 }
+
+and item =
+| FnItem of fn_item
 
 and fn_item = {
     name: string;
-    params: (string * string) list;
+    params: (string * string option) list;
     return_type: string option; (* if omitted, return unit type *)
     body: expr;
 }
@@ -70,6 +73,7 @@ and expr =
 (* Statements *)
 
 and stmt = 
+| Item              of item
 | LetStmt           of let_stmt
 | ConstStmt         of const_stmt
 

@@ -140,7 +140,7 @@ let rec expr_bp min_bp par =
                                     | Error e -> Error e
                                     | Ok (rhs', par'') -> Ok (Unary ({op = Not; rhs = rhs'}), par''))
     (* Invalid Token *)             
-    | _                     -> Error("unsupported token in language.", tok, par') in
+    | _                     -> Error ("unsupported token in language", tok, par') in
     (* Infix Operators *)
     match lhs with 
     | Error e -> Error e
@@ -204,6 +204,8 @@ let rec expr par = (* rename to expr_no_block *)
     | If -> let (_, par') = next par in par' |> if_expr (* consume keyword and parse expression *)
     | While -> let (_, par') = next par in par' |> while_expr 
     | Loop -> let (_, par') = next par in par' |> loop_expr
+    | Break -> let (_, par') = next par in par' |> break_expr
+    | Return -> let (_, par') = next par in par' |> return_expr
     | _ -> par |> expr_bp 0 (* expression without block *)
 
 and if_expr par = 
@@ -334,7 +336,7 @@ and stmt par =
     | Const -> (match const_stmt par with
             | Error e -> Error e
             | Ok (const_stmt, par') -> Ok(const_stmt, par'))
-    | _ ->  Error ("expected a statement", tok, par)  (* this SHOULDN'T happen if we check for keywords before calling stmt -> 
+    | _ -> Error ("expected a statement", tok, par)  (* this SHOULDN'T happen if we check for keywords before calling stmt -> 
                                                             if I forgot to add a stmt, then this error will remind me *)
 
 (* Block Expressions *)                                              
@@ -342,7 +344,7 @@ and stmt par =
 and parse_block stmts par = 
     let tok = peek par in 
     match tok.kind with 
-    | Fn | Let | Const -> (match stmt par with (* continue to parse statements *)
+    | Let | Const -> (match stmt par with (* continue to parse statements *)
                         | Error e -> Error e
                         | Ok (stmt, par) -> par |> parse_block (stmt :: stmts))
     | _ -> match expr par with (* other, parse expression *)
@@ -359,15 +361,93 @@ and block par =
     | LeftBrace -> let (_, par') = next par in par' |> parse_block []
     | _ -> Error ("expected { before block expression", tok, par)
 
+and parse_param par = 
+    match expect_identifier par with 
+    | Error e -> Error e
+    | Ok (name, par') ->
+        begin
+            match (peek par').kind with 
+            | Colon ->  let (_, par'') = next par' in
+                        begin
+                            match expect_identifier par'' with
+                            | Error e -> Error e
+                            | Ok (typ, par''') -> Ok ((name, Some typ), par''')
+                       end
+            | _ -> Ok ((name, None), par')
+        end
+
+and parse_params params par = 
+    let tok = peek par in 
+    match tok.kind with 
+    | Identifier _ -> begin (* more params to parse *)
+                        match parse_param par with 
+                        | Error e -> Error e
+                        | Ok ((param, typ), par') -> 
+                                let params' = (param, typ) :: params in 
+                                par' |> parse_params params'
+                      end
+    | Comma -> let (_, par') = next par in (* either more params to parse, or at RightParen OR invalid token *)
+                par' |> parse_params params
+    | RightParen -> let (_, par') = next par in (* consume ) token *)
+                    Ok (List.rev params, par') (* reverse list to get correct order *)
+    | _ -> Error ("expected ')' after params", tok, par)
+
+and parse_return_type par = 
+    let (_, par') = next par in 
+    match expect_identifier par' with (* TODO: Update AST to parse type annotations. For now, leaving them as identifiers is fine.*)
+    | Error e -> Error e
+    | Ok (typ, par'') -> Ok (typ, par'')
+
+and fn_item par = 
+    match expect_identifier par with
+    | Error e -> Error e
+    | Ok (name, par') -> 
+        let (tok, par') = next par in 
+        (match tok.kind with
+        | LeftParen -> 
+            begin
+                match parse_params [] par' with 
+                | Error e -> Error e
+                | Ok (params, par') -> 
+                    begin
+                        match (peek par').kind with
+                        | MinusGreater -> (match parse_return_type par' with
+                                           | Error e -> Error e
+                                           | Ok (typ, par'') -> 
+                                                (match block par'' with 
+                                                | Error e -> Error e
+                                                | Ok (body, par''') -> Ok (FnItem {name = name; params = params; return_type = Some typ; body = body;} ,par''')))             
+                                        | _ -> (match block par' with 
+                                            | Error e -> Error e
+                                            | Ok (body, par'') -> Ok (FnItem {name = name; params = params; return_type = None; body = body;} ,par''))
+                                    end
+                    end
+              
+        | _ -> Error ("expected '(' after function name", tok, par'))
+      
+
+and item par = 
+    let tok = peek par in
+    match tok.kind with 
+    | Fn -> let (_, par') = next par in 
+                (match par' |> fn_item with 
+                | Error e -> Error e
+                | Ok (fn_, par'') -> Ok (fn_, par''))
+    | _ -> Error ("expected an item", tok, par)  (* this SHOULDN'T happen if we check for keywords before calling item -> 
+                                                            if I forgot to add a item, then this error will remind me *)
+
 (* Parse Function *)
 
-let rec parse_helper stmts par = 
-    if is_at_end par then 
-        (stmts, par)
+let rec parse_helper items par =
+    if par |> is_at_end then
+        (items, par)
     else
-        match stmt par with 
-        | Error (msg, tok, par') -> (stmts, { par' with reporter = add_error tok.pos msg par'.reporter }) (* need better error handling *)
-        | Ok (stmt, par') -> par' |> parse_helper (stmt :: stmts) 
+        let tok = peek par in 
+        match tok.kind with
+        | Fn -> (match par |> item with (* ensures that in item, we CANNOT reach wildcard case *)
+                | Error (msg, tok', par') -> (items, { par' with reporter = add_error tok'.pos msg par'.reporter }) (* need better error handling *)
+                | Ok (item, par') -> par' |> parse_helper (item :: items))
+        | _ -> (items, { par with reporter = add_error tok.pos "expected an item: fn" par.reporter }) 
 
 let parse par =
     par |> parse_helper []

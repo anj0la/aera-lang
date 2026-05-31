@@ -333,6 +333,7 @@ let read_identifier lex =
         | "return"      -> lex' |> add_token Return |> Result.ok
         | "in"          -> lex' |> add_token In |> Result.ok
         | "as"          -> lex' |> add_token As |> Result.ok
+        | "unit"        -> lex' |> add_token Unit |> Result.ok
         | _             -> lex' |> add_identifier_token |> Result.ok
     
 let read_number lex c = 
