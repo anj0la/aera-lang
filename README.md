@@ -2,11 +2,13 @@
 
 > *Where ideas take shape.*
 
-Aera is an expression-oriented programming language centered around clarity and simplicity. There should be little to no friction when designing and writing code. Coding in Aera should just *feel* right.
+Aera is an expression-oriented programming language centered around clarity and simplicity. There should be little to no friction when designing and writing code. 
 
-Aera sits in the middle between languages that give you too much control and ones that are too slow, making it the ideal language for game and interactive development.
+It should just feel right.
 
-Aera is statically typed, with automatic memory management. It leans into functional programming concepts like immutable state, algebraic data types, and eventually, more advanced concepts like *effect handlers* and *pure functions*.
+Its design was shaped by the needs of interactive applications such as games and GUIs. The goal is not just to write code, but to shape ideas into systems that stay clear and understandable as they grow.
+
+Aera is statically typed, with automatic memory management. It leans into functional programming concepts like immutable state and algebraic data types.
 
 Aera takes inspiration from modern C++, Rust, OCaml, Swift and Go.
 
@@ -18,12 +20,18 @@ Aera takes inspiration from modern C++, Rust, OCaml, Swift and Go.
 
 Aera is currently in development. Version 0.1 will include:
 
-- Complete lexer and parser
-- Basic syntax support (variables, operators, expressions)
-- Control flow constructs
-- Function declarations and calls
-- Primitive data types
-- Terminal I/O library
+- Lexer  ✔
+- Parser ⏳ (in progress)
+- Primitive data types  ✔
+- Expressions (arithmetic, if, while, loop) ✔
+- Control flow constructs (break, return) ✔
+- Function declarations and function calls ✔
+- Variable declarations (let / const) ✔
+- Pretty printer ⏳ (next step, parser validation)
+- Environment system ⏳ (runtime foundation)
+- Interpreter ⏳ (after environment)
+- Terminal I/O library ⏳
+- Type system ⏳ (planned, not yet implemented)
 
 ## Documentation
 
