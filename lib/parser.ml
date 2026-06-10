@@ -62,6 +62,7 @@ let binary_bp op =
     | Mul | Div | Mod -> Some (19, 20)
     | _ -> None
 
+
 let get_binary_op tok_kind par =
     match tok_kind with
     (* Arithmetic *)
@@ -139,6 +140,15 @@ let rec expr_bp min_bp par =
                                     (match rhs with
                                     | Error e -> Error e
                                     | Ok (rhs', par'') -> Ok (Unary ({op = Not; rhs = rhs'}), par''))
+    (* Grouped Expression *)
+    | LeftParen             -> (match par' |> expr_bp min_bp with 
+                                    | Error e -> Error e
+                                    | Ok (expr, par'') -> 
+                                        let tok = peek par'' in 
+                                        (match tok.kind with 
+                                        | RightParen -> let (_, par''') = next par'' in 
+                                                            Ok (Grouping expr, par''')
+                                        | _ -> Error ("expected ')' to close grouping", tok, par'')))
     (* Invalid Token *)             
     | _                     -> Error ("unsupported token in language", tok, par') in
     (* Infix Operators *)
@@ -146,9 +156,33 @@ let rec expr_bp min_bp par =
     | Error e -> Error e
     | Ok (lhs', par'') -> loop lhs' min_bp par''
 
+and parse_args args par =
+    let tok = peek par in 
+    match tok.kind with 
+    | RightParen -> let (_, par') = next par in (* consume ) token *)
+                    Ok (List.rev args, par') (* reverse list to get correct order *)
+    | _ -> match expr par with 
+           | Error e -> Error e
+           | Ok (arg, par') -> 
+                let args' = (arg :: args) in
+                let tok = peek par' in 
+                (match tok.kind with 
+                | Comma -> let (_, par'') = next par' in (* either more args to parse, or at RightParen OR invalid token *)
+                            par'' |> parse_args args' 
+                | RightParen -> par' |> parse_args args'  
+                | _ -> Error ("expected ',' or ')' after parameter", tok, par')) 
+        
+and parse_call kind min_bp lhs par = 
+    match (peek par).kind with 
+    | LeftParen -> let (_, par') = next par in 
+                    (match par' |> parse_args [] with 
+                    | Error e -> Error e
+                    | Ok (args, par'') -> Ok (Call {callee = lhs; args = args}, par''))
+    | _ -> Ok (lhs, par) (* otherwise, early exit *)
+
 and parse_assign kind min_bp lhs par = 
     match par |> get_assign_op kind with 
-    | None -> Ok (lhs, par)
+    | None -> par |> parse_call kind min_bp lhs (* try to parse call *)
     | Some op -> begin
                     match assign_bp op with
                     | None -> Ok (lhs, par)
@@ -177,7 +211,7 @@ and loop lhs min_bp par =
                 | None -> par |> parse_assign kind min_bp lhs (* try to parse assign expression *)
                 | Some op    -> begin (* parse binary expression *)
                                     match binary_bp op with
-                                    | None      -> Ok (lhs, par)
+                                    | None -> Ok (lhs, par)
                                     | Some (left_bp, right_bp) ->
                                         if left_bp < min_bp then Ok (lhs, par)
                                         else
@@ -198,7 +232,7 @@ and loop lhs min_bp par =
 
 (* Expressions *)
 
-let rec expr par = (* rename to expr_no_block *)
+and expr par = (* rename to expr_no_block *)
     let tok = peek par in 
     match tok.kind with
     | If -> let (_, par') = next par in par' |> if_expr (* consume keyword and parse expression *)
@@ -383,11 +417,15 @@ and parse_params params par =
                         match parse_param par with 
                         | Error e -> Error e
                         | Ok ((param, typ), par') -> 
-                                let params' = (param, typ) :: params in 
-                                par' |> parse_params params'
+                                let params' = (param, typ) :: params in
+                                let tok = peek par' in 
+                                (match tok.kind with 
+                                | Comma -> let (_, par'') = next par' in (* either more params to parse, or at RightParen OR invalid token *)
+                                            par'' |> parse_params params'
+                                | RightParen -> par' |> parse_params params'  
+                                | _ -> Error ("expected ',' or ')' after parameter", tok, par'))
+                              
                       end
-    | Comma -> let (_, par') = next par in (* either more params to parse, or at RightParen OR invalid token *)
-                par' |> parse_params params
     | RightParen -> let (_, par') = next par in (* consume ) token *)
                     Ok (List.rev params, par') (* reverse list to get correct order *)
     | _ -> Error ("expected ')' after params", tok, par)
@@ -445,7 +483,7 @@ let rec parse_helper items par =
         let tok = peek par in 
         match tok.kind with
         | Fn -> (match par |> item with (* ensures that in item, we CANNOT reach wildcard case *)
-                | Error (msg, tok', par') -> (items, { par' with reporter = add_error tok'.pos msg par'.reporter }) (* need better error handling *)
+                | Error (msg, tok', par') -> (items, { par' with reporter = add_error tok'.pos msg par'.reporter }) (* needs better error handling *)
                 | Ok (item, par') -> par' |> parse_helper (item :: items))
         | _ -> (items, { par with reporter = add_error tok.pos "expected an item: fn" par.reporter }) 
 

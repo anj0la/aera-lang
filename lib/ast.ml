@@ -59,7 +59,7 @@ and expr =
 | Literal           of literal
 | Identifier        of string
 | Grouping          of expr
-| FnCall            of { callee: expr; args: expr list }
+| Call              of { callee: expr; args: expr list }
 | Binary            of { lhs: expr; op: binary_op; rhs: expr }
 | Assign            of { lhs: expr; op: assign_op; rhs: expr }
 | Unary             of { op: unary_op; rhs: expr }
