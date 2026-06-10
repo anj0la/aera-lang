@@ -73,7 +73,6 @@ and expr =
 (* Statements *)
 
 and stmt = 
-| Item              of item
 | LetStmt           of let_stmt
 | ConstStmt         of const_stmt
 
