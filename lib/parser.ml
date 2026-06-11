@@ -488,4 +488,5 @@ let rec parse_helper items par =
         | _ -> (items, { par with reporter = add_error tok.pos "expected an item: fn" par.reporter }) 
 
 let parse par =
-    par |> parse_helper []
+    let (items, par') = par |> parse_helper [] in 
+    ({ items = items }, par')
