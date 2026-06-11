@@ -229,3 +229,6 @@ and format_program_helper items prefix =
 let print_ast program =
     let items_lst = format_program program.items in
     List.iter print_endline items_lst
+
+let print_expr expr =
+    List.iter print_endline (format_expr "" false expr)

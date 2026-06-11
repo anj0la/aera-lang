@@ -150,7 +150,7 @@ let rec expr_bp min_bp par =
                                                             Ok (Grouping expr, par''')
                                         | _ -> Error ("expected ')' to close grouping", tok, par'')))
     (* Invalid Token *)             
-    | _                     -> Error ("unsupported token in language", tok, par') in
+    | _                     -> Error ("unsupported token in language", tok, par') in (* THIS IS WHERE THE ERROR IS FOR MY EXPRESSION *)
     (* Infix Operators *)
     match lhs with 
     | Error e -> Error e
