@@ -3,7 +3,7 @@ open Aera
 let () = 
 (* Build lexer *)
 let lex: Lexer.lexer = {
-	source = "fn main() { 42 }";
+	source = "fn add(a: int32, b: int32) { a + b }";
     start = 0;
     curr = 0;
     start_pos = { line = 1; col = 1 };
