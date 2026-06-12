@@ -22,7 +22,7 @@ let peek_next par =
     | _ -> failwith "the parser cannot be empty."
 
 let is_at_end par =
-    (peek par).kind <> EOF
+    (peek par).kind = EOF
 
 let advance par =
     match par.tokens with
@@ -33,8 +33,7 @@ let next par =
     (peek par, advance par)
 
 let check kind par = 
-    if is_at_end par then (* checks that the token is NOT EOF *)
-        false
+    if is_at_end par then false
     else
         let token = peek par in token.kind = kind
 
@@ -150,11 +149,40 @@ let rec expr_bp min_bp par =
                                                             Ok (Grouping expr, par''')
                                         | _ -> Error ("expected ')' to close grouping", tok, par'')))
     (* Invalid Token *)             
-    | _                     -> Error ("unsupported token in language", tok, par') in (* THIS IS WHERE THE ERROR IS FOR MY EXPRESSION *)
+    | _                     -> let msg = Printf.sprintf "unsupported token in language: %s" tok.lexeme in
+                Error (msg, tok, par') in (* THIS IS WHERE THE ERROR IS FOR MY EXPRESSION *)
     (* Infix Operators *)
     match lhs with 
     | Error e -> Error e
     | Ok (lhs', par'') -> loop lhs' min_bp par''
+
+and loop lhs min_bp par =
+    let tok = peek par in 
+    match tok.kind with 
+    | EOF   -> Ok (lhs, par)
+    | kind  -> begin 
+                match par |> get_binary_op kind with
+                | None -> par |> parse_assign kind min_bp lhs (* try to parse assign expression *)
+                | Some op    -> begin (* parse binary expression *)
+                                    match binary_bp op with
+                                    | None -> Ok (lhs, par)
+                                    | Some (left_bp, right_bp) ->
+                                        if left_bp < min_bp then Ok (lhs, par)
+                                        else
+                                            let (_, par') = next par in
+                                            let res = par' |> expr_bp right_bp in
+                                            begin 
+                                                match res with
+                                                | Error e -> Error e
+                                                | Ok (rhs, par'') -> let lhs' = Binary ({lhs = lhs; op = op; rhs = rhs}) in
+                                                                match par'' |> loop lhs' min_bp with
+                                                                | Error e -> Error e
+                                                                | Ok (lhs'', par''') -> Ok (lhs'', par''')
+                                            end
+                                end
+                                            
+
+                end
 
 and parse_args args par =
     let tok = peek par in 
@@ -200,39 +228,9 @@ and parse_assign kind min_bp lhs par =
                                                         | Ok (lhs'', par''') -> Ok (lhs'', par''')
                                             end
                                 end
-
-
-and loop lhs min_bp par =
-    let tok = peek par in 
-    match tok.kind with 
-    | EOF   -> Ok (lhs, par)
-    | kind  -> begin 
-                match par |> get_binary_op kind with
-                | None -> par |> parse_assign kind min_bp lhs (* try to parse assign expression *)
-                | Some op    -> begin (* parse binary expression *)
-                                    match binary_bp op with
-                                    | None -> Ok (lhs, par)
-                                    | Some (left_bp, right_bp) ->
-                                        if left_bp < min_bp then Ok (lhs, par)
-                                        else
-                                            let (_, par') = next par in
-                                            let res = par' |> expr_bp right_bp in
-                                            begin 
-                                                match res with
-                                                | Error e -> Error e
-                                                | Ok (rhs, par'') -> let lhs' = Binary ({lhs = lhs; op = op; rhs = rhs}) in
-                                                                match par'' |> loop lhs' min_bp with
-                                                                | Error e -> Error e
-                                                                | Ok (lhs'', par''') -> Ok (lhs'', par''')
-                                            end
-                                end
-                                            
-
-                end
-
 (* Expressions *)
 
-and expr par = (* rename to expr_no_block *)
+and expr par =
     let tok = peek par in 
     match tok.kind with
     | If -> let (_, par') = next par in par' |> if_expr (* consume keyword and parse expression *)
@@ -440,7 +438,7 @@ and fn_item par =
     match expect_identifier par with
     | Error e -> Error e
     | Ok (name, par') -> 
-        let (tok, par') = next par in 
+        let (tok, par') = next par' in 
         (match tok.kind with
         | LeftParen -> 
             begin
@@ -477,7 +475,9 @@ and item par =
 (* Parse Function *)
 
 let rec parse_helper items par =
-    if par |> is_at_end then
+    let tok = peek par in
+    let _ = Printf.printf "parse_helper: token = %s, items = %d\n" tok.lexeme (List.length items) in
+    if par |> is_at_end then        
         (items, par)
     else
         let tok = peek par in 

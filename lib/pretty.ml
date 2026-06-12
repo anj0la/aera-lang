@@ -122,8 +122,8 @@ and format_block stmts expr prefix is_last =
 and format_block_helper stmts prefix is_last = 
     match stmts with 
     | [] -> []
-    | [ stmt ] -> format_stmt stmt prefix true
-    | h :: t -> format_stmt h prefix is_last @ format_block_helper t prefix is_last
+    | [ stmt ] -> stmt |> format_stmt prefix true
+    | h :: t -> (h |> format_stmt prefix is_last) @ format_block_helper t prefix is_last
 
 and format_infinite_loop expr prefix is_last =
     let infinite_loop_lst = [ Printf.sprintf "%s %s Loop" prefix (connector is_last) ] in 
@@ -160,7 +160,7 @@ and format_return expr_opt prefix is_last =
                     return_lst @ expr_lst
     | None -> return_lst
 
-and format_stmt stmt prefix is_last  = 
+and format_stmt prefix is_last stmt  = 
     match stmt with 
     | LetStmt { name; typ; expr }           -> format_let name typ expr prefix is_last
     | ConstStmt { name; typ; expr }         -> format_const name typ expr prefix is_last
@@ -185,7 +185,7 @@ and format_const name typ expr prefix is_last =
     let expr_lst = expr |> format_expr (child_prefix prefix is_last) true in
     let_lst @ name_lst @ typ_lst @ expr_lst
     
-and format_item item prefix is_last = 
+and format_item prefix is_last item = 
     match item with 
     | FnItem { name; params; return_type; body } -> format_fn name params return_type body prefix is_last
 
@@ -223,12 +223,19 @@ and format_program items =
 and format_program_helper items prefix =
     match items with 
     | [] -> []
-    | [ item ] -> format_item item prefix true
-    | h :: t -> format_item h prefix false @ format_program_helper t prefix
+    | [ item ] -> item |> format_item prefix true
+    | h :: t -> (h |> format_item prefix false) @ format_program_helper t prefix
+
+let print_expr expr =
+    List.iter print_endline (expr |> format_expr "" false)
+
+let print_stmt stmt =
+    List.iter print_endline (stmt |> format_stmt "" false)
+
+let print_item item =
+    List.iter print_endline (item |> format_item "" false)
 
 let print_ast program =
     let items_lst = format_program program.items in
     List.iter print_endline items_lst
 
-let print_expr expr =
-    List.iter print_endline (format_expr "" false expr)
