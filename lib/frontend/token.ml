@@ -1,9 +1,8 @@
 open Position
-open Int64
 
 type token_kind = 
 | Identifier of string
-| IntLiteral of Int64.t
+| IntLiteral of int
 | FloatLiteral of float
 | CharLiteral of char
 | StringLiteral of string

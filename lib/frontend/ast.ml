@@ -26,7 +26,7 @@ type assign_op =
 (* Literals *)
 
 type literal =
-| LitInt of Int64.t (* resolve suffix and type later *)
+| LitInt of int (* resolve suffix and type later *)
 | LitFloat of float (* resolve suffix and type later *)
 | LitChar of char
 | LitString of string

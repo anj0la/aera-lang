@@ -1,7 +1,5 @@
-open Int64
-
 type value = 
-| VInt of Int64.t
+| VInt of int
 | VFloat of float
 | VChar of char
 | VString of string

@@ -1,5 +1,4 @@
 open Error
-open Int64
 open Position
 open Token
 
@@ -94,7 +93,7 @@ let add_string_token buf lex =
 let add_int_token lex =
       let text = 
         String.sub lex.source lex.start (lex.curr - lex.start) in
-    let token = { kind = (IntLiteral (Int64.of_string text)); lexeme = text; pos = lex.start_pos } in
+    let token = { kind = (IntLiteral (int_of_string text)); lexeme = text; pos = lex.start_pos } in
         { lex with tokens = token :: lex.tokens }
 
 let add_float_token lex =

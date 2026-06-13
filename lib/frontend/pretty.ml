@@ -61,7 +61,7 @@ let format_identifier prefix is_last value =
 
 let rec format_expr prefix is_last expr = 
     match expr with
-    | Literal (LitInt n)                                -> format_literal prefix is_last (Int64.to_string n)
+    | Literal (LitInt n)                                -> format_literal prefix is_last (string_of_int n)
     | Literal (LitFloat f)                              -> format_literal prefix is_last (string_of_float f)
     | Literal (LitChar c)                               -> format_literal prefix is_last (String.make 1 c)
     | Literal (LitString s)                             -> format_literal prefix is_last s
