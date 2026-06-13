@@ -3,7 +3,7 @@ open Frontend
 let () = 
 (* Build lexer *)
 let lex: Lexer.lexer = {
-	source = "fn add(a: int32, b: int32) { a + b }";
+	source = "42";
     start = 0;
     curr = 0;
     start_pos = { line = 1; col = 1 };
