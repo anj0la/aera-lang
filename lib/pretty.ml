@@ -3,9 +3,9 @@ open Parser
 
 let connector is_last = (* the connector for the node -> if the last node, the connector has a curve *)
     if is_last then
-        "└── "
+        "└──"
     else 
-        "├── "
+        "├──"
 
 let child_prefix prefix is_last =
     if is_last then
@@ -241,4 +241,3 @@ let print_item item =
 let print_ast program =
     let items_lst = format_program program.items in
     List.iter print_endline items_lst
-
