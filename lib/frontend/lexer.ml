@@ -12,6 +12,16 @@ type lexer = {
     reporter: reporter;
 }
 
+let init src = {
+	source = src;
+    start = 0;
+    curr = 0;
+    start_pos = { line = 1; col = 1 };
+	pos = { line = 1; col = 1 };
+    tokens = [];
+    reporter = { Error.errors = [] };
+} 
+
 let is_digit c = 
     c >= '0' && c <= '9'
 

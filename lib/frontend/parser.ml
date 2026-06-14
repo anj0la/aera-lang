@@ -11,6 +11,12 @@ type parser = {
 
 (* Helper Functions *)
 
+let init tokens reporter = {
+    tokens = tokens;
+    reporter = reporter;
+    curr = 0;
+}
+
 let peek par =
     match par.tokens with 
     | h :: _ -> h

@@ -8,7 +8,7 @@ let test_let_binding () =
         let_ 1 1;
         identifier "x" 1 5;
         equal 1 7;
-        int_lit 5L "5" 1 9;
+        int_lit 5 "5" 1 9;
         eof 1 10;
     ]
 
@@ -31,7 +31,7 @@ let test_while_expr () =
         while_ 1 1;
         identifier "x" 1 7;
         greater 1 9;
-        int_lit 10L "10" 1 11;
+        int_lit 10 "10" 1 11;
         left_brace 1 14;
         identifier "do_something" 1 16;
         left_paren 1 28;
@@ -183,7 +183,7 @@ let test_binary_int () =
         let_ 1 1;
         identifier "answer" 1 5;
         equal 1 12;
-        int_lit 0b001L "0b001" 1 14;
+        int_lit 0b001 "0b001" 1 14;
         eof 1 19;
     ]
 
@@ -193,7 +193,7 @@ let test_octal_int () =
         let_ 1 1;
         identifier "answer" 1 5;
         equal 1 12;
-        int_lit 0o512L "0o512" 1 14;
+        int_lit 0o512 "0o512" 1 14;
         eof 1 19;
     ]
     
@@ -203,7 +203,7 @@ let test_hexadecimal_int () =
         let_ 1 1;
         identifier "answer" 1 5;
         equal 1 12;
-        int_lit 0xFF0000L "0xFF0000" 1 14;
+        int_lit 0xFF0000 "0xFF0000" 1 14;
         eof 1 22;
     ]
 
@@ -213,7 +213,7 @@ let test_decimal_int () =
         let_ 1 1;
         identifier "answer" 1 5;
         equal 1 12;
-        int_lit 42L "42" 1 14;
+        int_lit 42 "42" 1 14;
         eof 1 16;
     ]
 
@@ -309,7 +309,7 @@ let test_comment_ignored () =
         let_ 1 1;
         identifier "x" 1 5;
         equal 1 7;
-        int_lit 5L "5" 1 9;
+        int_lit 5 "5" 1 9;
         eof 1 26;
     ]
 
@@ -319,7 +319,7 @@ let test_unterminated_block_comment () =
         let_ 1 1;
         identifier "x" 1 5;
         equal 1 7;
-        int_lit 5L "5" 1 9;
+        int_lit 5 "5" 1 9;
         illegal "<# this is not closed" 1 11;
         eof 1 32;
     ]
@@ -380,7 +380,7 @@ fn sum(num: int64) -> int64 {
         equal 2 13;
         identifier "sum" 2 15;
         left_paren 2 18;
-        int_lit 5L "5" 2 19;
+        int_lit 5 "5" 2 19;
         right_paren 2 20;
         identifier "print" 3 5;
         left_paren 3 10;
@@ -405,11 +405,11 @@ fn sum(num: int64) -> int64 {
         colon 7 18;
         identifier "int64" 7 20;
         equal 7 26;
-        int_lit 0L "0" 7 28;
+        int_lit 0 "0" 7 28;
         for_ 8 5;
         identifier "i" 8 9;
         in_ 8 11;
-        int_lit 0L "0" 8 14;
+        int_lit 0 "0" 8 14;
         period_period 8 15;
         identifier "num" 8 17;
         left_brace 8 21;

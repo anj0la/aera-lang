@@ -24,7 +24,7 @@ let make_token kind lexeme line col =   { Token.kind; lexeme; pos = { line; col 
 let token_to_string kind =
   match kind with
   | Token.Identifier str      -> Printf.sprintf "identifier(%s)" str
-  | IntLiteral num            -> Printf.sprintf "int(%Ld)" num
+  | IntLiteral num            -> Printf.sprintf "int(%d)" num
   | FloatLiteral num          -> Printf.sprintf "float(%f)" num
   | CharLiteral c             -> Printf.sprintf "char(%c)" c
   | StringLiteral str         -> Printf.sprintf "str(%s)" str

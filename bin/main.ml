@@ -1,29 +1,17 @@
 open Frontend
-	
-let () = 
-(* Build lexer *)
-let lex: Lexer.lexer = {
-	source = "42";
-    start = 0;
-    curr = 0;
-    start_pos = { line = 1; col = 1 };
-	pos = { line = 1; col = 1 };
-    tokens = [];
-    reporter = { Error.errors = [] };
-} 
-(* Parse tokens*)
-in let lex' = Lexer.read_tokens lex in 
-let par: Parser.parser = {
-    tokens = lex'.tokens;
-    reporter = lex'.reporter;
-    curr = 0;
-} in 
-(* Print Ast*)
-(* match Parser.expr par with 
-| Error (msg, tok, par') -> print_endline (Printf.sprintf "%s" msg)
-| Ok (expr, par') -> Pretty.print_expr expr
-*) 
+open Interpreter
 
-let (program, _) = Parser.parse par in
-Pretty.print_ast program
-
+let has_valid_ext path =
+  Filename.check_suffix path ".aera"
+    
+let () =
+    match Sys.argv with
+    | [| _; path |] -> (* expects ABSOLUTE PATH right now, will resolve paths later *)
+        if not (has_valid_ext path) then 
+            print_endline "error: expected file name with .aera extension"
+        else
+            Interpreter.interpret path
+    | [| _ |] -> 
+        print_endline "Welcome to Aera 0.1.0\nType 'quit' to exit.\n";
+        Interpreter.repl ()
+    | _ -> print_endline "error: expected file name with .aera extension. usage: aera <file>"
