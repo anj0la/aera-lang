@@ -21,17 +21,20 @@ Aera takes inspiration from modern C++, Rust, OCaml, Swift and Go.
 Aera is currently in development. Version 0.1 will include:
 
 - Lexer  ✔
-- Parser ⏳ (in progress)
+- Parser ✔
 - Primitive data types  ✔
 - Expressions (arithmetic, if, while, loop) ✔
 - Control flow constructs (break, return) ✔
 - Function declarations and function calls ✔
 - Variable declarations (let / const) ✔
-- Pretty printer ⏳ (next step, parser validation)
-- Environment system ⏳ (runtime foundation)
-- Interpreter ⏳ (after environment)
+- Pretty printer ✔
+- Evaluate expressions ✔
+- Interpreter ✔
+- Environment system ⏳
+- Evaluate let / const statements ⏳
+- Evaulate function items ⏳
 - Terminal I/O library ⏳
-- Type system ⏳ (planned, not yet implemented)
+- Type system ⏳
 
 ## Documentation
 
