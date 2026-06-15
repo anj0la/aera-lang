@@ -156,7 +156,7 @@ let rec expr_bp min_bp par =
                                         | _ -> Error ("expected ')' to close grouping", tok, par'')))
     (* Invalid Token *)             
     | _                     -> let msg = Printf.sprintf "unsupported token in language: %s" tok.lexeme in
-                Error (msg, tok, par') in (* THIS IS WHERE THE ERROR IS FOR MY EXPRESSION *)
+                Error (msg, tok, par') in 
     (* Infix Operators *)
     match lhs with 
     | Error e -> Error e
@@ -190,6 +190,27 @@ and loop lhs min_bp par =
 
                 end
 
+and parse_assign kind min_bp lhs par = 
+    match par |> get_assign_op kind with 
+    | None -> par |> parse_call kind min_bp lhs (* try to parse call *)
+    | Some op -> begin
+                    match assign_bp op with
+                    | None -> Ok (lhs, par)
+                    | Some (left_bp, right_bp) ->
+                        if left_bp < min_bp then Ok (lhs, par)
+                        else
+                            let (_, par') = next par in
+                            let res = par' |> expr_bp right_bp in
+                            begin 
+                                match res with
+                                | Error e -> Error e
+                                | Ok (rhs, par'') -> let lhs' = Assign ({lhs = lhs; op = op; rhs = rhs}) in
+                                                        match par'' |> loop lhs' min_bp with
+                                                        | Error e -> Error e
+                                                        | Ok (lhs'', par''') -> Ok (lhs'', par''')
+                                            end
+                                end
+
 and parse_args args par =
     let tok = peek par in 
     match tok.kind with 
@@ -214,32 +235,12 @@ and parse_call kind min_bp lhs par =
                     | Ok (args, par'') -> Ok (Call {callee = lhs; args = args}, par''))
     | _ -> Ok (lhs, par) (* otherwise, early exit *)
 
-and parse_assign kind min_bp lhs par = 
-    match par |> get_assign_op kind with 
-    | None -> par |> parse_call kind min_bp lhs (* try to parse call *)
-    | Some op -> begin
-                    match assign_bp op with
-                    | None -> Ok (lhs, par)
-                    | Some (left_bp, right_bp) ->
-                        if left_bp < min_bp then Ok (lhs, par)
-                        else
-                            let (_, par') = next par in
-                            let res = par' |> expr_bp right_bp in
-                            begin 
-                                match res with
-                                | Error e -> Error e
-                                | Ok (rhs, par'') -> let lhs' = Assign ({lhs = lhs; op = op; rhs = rhs}) in
-                                                        match par'' |> loop lhs' min_bp with
-                                                        | Error e -> Error e
-                                                        | Ok (lhs'', par''') -> Ok (lhs'', par''')
-                                            end
-                                end
 (* Expressions *)
 
 and expr par =
     let tok = peek par in 
     match tok.kind with
-    | If -> let (_, par') = next par in par' |> if_expr (* consume keyword and parse expression *)
+    | If -> let (_, par') = next par in par' |> if_expr
     | While -> let (_, par') = next par in par' |> while_expr 
     | Loop -> let (_, par') = next par in par' |> loop_expr
     | Break -> let (_, par') = next par in par' |> break_expr
@@ -274,7 +275,7 @@ and while_expr par =
         begin
             match block par' with 
             | Error e -> Error e
-            | Ok (body, par'') -> Ok (WhileLoop {cond = expr'; body = body;}, par'')
+            | Ok (body, par'') -> Ok (WhileLoop {cond = expr'; body = body}, par'')
         end
 
 and loop_expr par = 
@@ -282,11 +283,10 @@ and loop_expr par =
     | Error e -> Error e
     | Ok (expr', par') -> Ok (InfiniteLoop expr', par')
 
-
 and break_expr par = 
     match (peek par).kind with 
-    | Else | RightBrace | EOF -> Ok (BreakExpr None, par) (* break with no expression  *)
-    | _ -> (* break with expression  *)
+    | Else | RightBrace | EOF -> Ok (BreakExpr None, par)
+    | _ -> (* break with expression *)
         match expr par with 
         | Error e -> Error e
         | Ok (expr', par') ->  Ok (BreakExpr (Some expr'), par')
@@ -301,12 +301,6 @@ and return_expr par =
     
 (* Statements *)
 
-and parse_expr par = 
-    let (_, par') = next par in (* consume = token *)
-    match expr par' with 
-    | Error e -> Error e
-    | Ok (expr', par') -> Ok (expr', par')
-
 and let_stmt par =
     match expect_identifier par with (* advance to the next token *)
     | Error e -> Error e
@@ -319,18 +313,20 @@ and let_stmt par =
                             | Ok (typ, par'') -> begin 
                                                     match (peek par'').kind with 
                                                     | Equal -> begin
-                                                                    match parse_expr par'' with 
-                                                                    | Error e -> Error e
-                                                                    | Ok (expr', par''') -> 
-                                                                        Ok (LetStmt { name = name; typ = Some typ; expr = Some expr' }, par''')
+                                                                let (_, par''') = next par'' in (* consume = token *)
+                                                                match expr par''' with 
+                                                                | Error e -> Error e
+                                                                | Ok (expr', par'''') -> 
+                                                                    Ok (LetStmt { name = name; typ = Some typ; expr = Some expr' }, par'''')
                                                                 end
                                                     | _ -> Ok (LetStmt { name = name; typ = Some typ; expr = None }, par'')
                                                 end
                         end
             | Equal -> begin
-                            match parse_expr par' with 
+                            let (_, par'') = next par' in (* consume = token *)
+                            match expr par'' with 
                             | Error e -> Error e
-                            | Ok (expr', par'') -> Ok (LetStmt { name = name; typ = None; expr = Some expr' }, par'')
+                            | Ok (expr', par''') -> Ok (LetStmt { name = name; typ = None; expr = Some expr' }, par''')
                         end
             | _ -> Ok (LetStmt { name = name; typ = None; expr = None }, par')
 
@@ -349,18 +345,20 @@ and const_stmt par = match expect_identifier par with (* advance to the next tok
                                                     begin 
                                                         match tok'.kind with 
                                                         | Equal -> begin
-                                                                        match parse_expr par'' with 
-                                                                        | Error e -> Error e
-                                                                        | Ok (expr', par''') -> 
-                                                                            Ok (ConstStmt { name = name; typ = Some typ; expr = expr' }, par''')
+                                                                    let (_, par''') = next par'' in (* consume = token *)
+                                                                    match expr par''' with 
+                                                                    | Error e -> Error e
+                                                                    | Ok (expr', par'''') -> 
+                                                                        Ok (ConstStmt { name = name; typ = Some typ; expr = expr' }, par''')
                                                                     end
                                                         | _ -> Error ("expected expression after '='", tok', par'')
                                                     end
                         end
             | Equal -> begin
-                            match parse_expr par' with 
+                            let (_, par'') = next par' in (* consume = token *)
+                            match expr par'' with 
                             | Error e -> Error e
-                            | Ok (expr', par'') -> Ok (ConstStmt { name = name; typ = None; expr = expr' }, par'')
+                            | Ok (expr', par''') -> Ok (ConstStmt { name = name; typ = None; expr = expr' }, par''')
                         end
             | _ -> Error ("expected '=' for constant declaration", tok, par')
         end
@@ -399,7 +397,9 @@ and block par =
     | LeftBrace -> let (_, par') = next par in par' |> parse_block []
     | _ -> Error ("expected { before block expression", tok, par)
 
-and parse_param par = 
+(* Items *)
+
+and parse_fn_param par = 
     match expect_identifier par with 
     | Error e -> Error e
     | Ok (name, par') ->
@@ -414,19 +414,19 @@ and parse_param par =
             | _ -> Ok ((name, None), par')
         end
 
-and parse_params params par = 
+and parse_fn_params params par = 
     let tok = peek par in 
     match tok.kind with 
     | Identifier _ -> begin (* more params to parse *)
-                        match parse_param par with 
+                        match parse_fn_param par with 
                         | Error e -> Error e
                         | Ok ((param, typ), par') -> 
                                 let params' = (param, typ) :: params in
                                 let tok = peek par' in 
                                 (match tok.kind with 
                                 | Comma -> let (_, par'') = next par' in (* either more params to parse, or at RightParen OR invalid token *)
-                                            par'' |> parse_params params'
-                                | RightParen -> par' |> parse_params params'  
+                                            par'' |> parse_fn_params params'
+                                | RightParen -> par' |> parse_fn_params params'  
                                 | _ -> Error ("expected ',' or ')' after parameter", tok, par'))
                               
                       end
@@ -436,7 +436,7 @@ and parse_params params par =
 
 and parse_return_type par = 
     let (_, par') = next par in 
-    match expect_identifier par' with (* TODO: Update AST to parse type annotations. For now, leaving them as identifiers is fine.*)
+    match expect_identifier par' with (* TODO: Update AST to parse type annotations. For now, leaving them as identifiers is fine. *)
     | Error e -> Error e
     | Ok (typ, par'') -> Ok (typ, par'')
 
@@ -448,7 +448,7 @@ and fn_item par =
         (match tok.kind with
         | LeftParen -> 
             begin
-                match parse_params [] par' with 
+                match parse_fn_params [] par' with 
                 | Error e -> Error e
                 | Ok (params, par') -> 
                     begin
@@ -458,15 +458,64 @@ and fn_item par =
                                            | Ok (typ, par'') -> 
                                                 (match block par'' with 
                                                 | Error e -> Error e
-                                                | Ok (body, par''') -> Ok (FnItem {name = name; params = params; return_type = Some typ; body = body;} ,par''')))             
+                                                | Ok (body, par''') -> Ok (FnItem {name = name; params = params; return_type = Some typ; body = body} ,par''')))             
                                         | _ -> (match block par' with 
                                             | Error e -> Error e
-                                            | Ok (body, par'') -> Ok (FnItem {name = name; params = params; return_type = None; body = body;} ,par''))
+                                            | Ok (body, par'') -> Ok (FnItem {name = name; params = params; return_type = None; body = body} ,par''))
                                     end
                     end
               
         | _ -> Error ("expected '(' after function name", tok, par'))
-      
+
+and parse_field_item par =
+    match expect_identifier par with 
+    | Error e -> Error e
+    | Ok (name, par') ->
+        begin 
+            let tok = peek par in
+            match tok.kind with 
+            | Colon ->  let (_, par'') = next par' in 
+                        begin 
+                            match expect_identifier par'' with (* TODO: Change to actually parsing the type instead of parsing as an identifier *)
+                            | Error e -> Error e
+                            | Ok (typ, par''') -> Ok ((name, typ), par''')
+                        end
+            | _     -> Error ("expected type after struct field.", tok, par')
+        end
+
+and parse_field_items fields par =
+    let tok = peek par in 
+    match tok.kind with 
+    | Identifier _ -> begin (* more fields to parse *)
+                        match parse_field_item par with
+                        | Error e -> Error e
+                        | Ok ((name, typ), par') ->
+                                let fields' = (name, typ) :: fields in 
+                                let tok = peek par' in
+                                (match tok.kind with 
+                                | RightBrace -> par' |> parse_field_items fields'
+                                | _ -> Error ("expected '}' after field item", tok, par'))
+                        end
+    | RightBrace -> let (_, par') = next par in (* consume } token *)
+                    Ok (List.rev fields, par')
+    | _ -> Error ("expected '}' after field items", tok, par)
+
+and struct_item par =
+    match expect_identifier par with
+        | Error e -> Error e
+        | Ok (name, par') -> 
+            let (tok, par') = next par' in 
+                (match tok.kind with
+                | LeftBrace -> 
+                    begin 
+                        match parse_field_items [] par' with 
+                        | Error e -> Error e
+                        | Ok (fields, par') -> Ok (StructItem {name = name; fields = fields}, par')
+                    end
+                | _ -> Error ("expected '{' after struct name", tok, par'))
+
+
+
 
 and item par = 
     let tok = peek par in
@@ -474,7 +523,11 @@ and item par =
     | Fn -> let (_, par') = next par in 
                 (match par' |> fn_item with 
                 | Error e -> Error e
-                | Ok (fn_, par'') -> Ok (fn_, par''))
+                | Ok (fn_item, par'') -> Ok (fn_item, par''))
+    | Struct -> let (_, par') = next par in 
+                (match par' |> struct_item with 
+                | Error e -> Error e
+                | Ok (struct_item, par'') -> Ok (struct_item, par''))
     | _ -> Error ("expected an item", tok, par)  (* this SHOULDN'T happen if we check for keywords before calling item -> 
                                                             if I forgot to add a item, then this error will remind me *)
 

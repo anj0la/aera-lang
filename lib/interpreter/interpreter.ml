@@ -13,8 +13,8 @@ let print_value v =
     | VInt n        -> print_endline (string_of_int n)
     | VFloat f      -> print_endline (string_of_float f)
     | VBool b       -> print_endline (string_of_bool b)
-    | VChar c       -> print_endline (String.make 1 c)
-    | VString s     -> print_endline s
+    | VChar c       -> print_endline ("\'" ^ (String.make 1 c) ^ "\'")
+    | VString s     -> print_endline ("\"" ^ s ^ "\"")
     | VUnit         -> print_endline "unit"
 
 let interpret path =
@@ -29,7 +29,7 @@ let interpret path =
             (match eval expr with 
             | Error e   -> print_endline e
             | Ok value  -> print_value value)
-            
+
 let rec repl () = 
     print_string "~> ";
     flush stdout;

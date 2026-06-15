@@ -40,12 +40,27 @@ type program = {
 
 and item =
 | FnItem of fn_item
+| StructItem of struct_item
+| VariantItem of variant_item
 
 and fn_item = {
     name: string;
     params: (string * string option) list;
     return_type: string option; (* if omitted, return unit type *)
     body: expr;
+}
+
+and struct_item = {
+    name: string;
+    fields: (string * string) list; (* format = name : type *)
+}
+
+and variant_case = string * (string * string) list (* if the list is empty, the variant carries nothing *)
+                                                   (* note -> string * string will be changed to string * typ once
+                                                    type system has been implemented *)
+and variant_item = {
+    name: string;
+    cases: variant_case list;
 }
 
 (* Expressions *)

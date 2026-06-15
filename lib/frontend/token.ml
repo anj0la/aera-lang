@@ -21,6 +21,8 @@ type token_kind =
 | Break
 | Continue
 | Return
+| Struct
+| Variant
 | In
 | As
 | Unit
