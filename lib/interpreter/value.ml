@@ -1,3 +1,5 @@
+module StringMap = Map.Make(String)
+
 type value = 
 | VInt of int
 | VFloat of float
@@ -5,3 +7,5 @@ type value =
 | VString of string
 | VBool of bool
 | VUnit
+
+and environment = value StringMap.t list

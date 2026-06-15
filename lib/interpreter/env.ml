@@ -1,11 +1,16 @@
 open Frontend.Token
 open Value
 
-module StringMap = Map.Make(String)
 
-type environment = {
-	bindings: value StringMap.t
-}
 
-let bind name value env = (* binds a new name to a value -> IMMUTABLE, so no reassignment *)
-	StringMap.add name value env
+let bind name value env =
+    match env with 
+    | [] -> failwith "the environment should never be empty"
+    | scope :: rest -> (StringMap.add name value scope) :: rest (* adds a binding to the CURRENT scope *)
+
+let rec find name env =
+    match env with
+    | [] -> None
+    | scope :: rest -> (match StringMap.find_opt name scope with
+                    | Some value -> Some value
+                    | None -> find name rest)
