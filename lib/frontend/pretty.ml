@@ -187,7 +187,9 @@ and format_const name typ expr prefix is_last =
     
 and format_item prefix is_last item = 
     match item with 
-    | FnItem { name; params; return_type; body } -> format_fn name params return_type body prefix is_last
+    | FnItem { name; params; return_type; body }    -> format_fn name params return_type body prefix is_last
+    | StructItem { name; fields }                   -> format_struct name fields prefix is_last
+    | VariantItem { name; cases }                   -> format_variant name cases prefix is_last
 
  and format_fn name params return_type body prefix is_last =
     let fn_lst = [ Printf.sprintf "%s%s FnItem" prefix (connector is_last) ] in
@@ -218,6 +220,46 @@ and format_fn_helper params prefix =
                     [ Printf.sprintf "%s%s Param { name = \"%s\", type = \"%s\" }" prefix (connector false) name typ' ]
                     @ format_fn_helper t prefix
 
+and format_struct name fields prefix is_last =
+    let struct_lst = [ Printf.sprintf "%s%s StructItem" prefix (connector is_last) ] in 
+    let name_lst = [ Printf.sprintf "%s%s name = %s" (child_prefix prefix is_last) (connector false) name ] in
+    let fields_lst = [ Printf.sprintf "%s%s Fields" (child_prefix prefix is_last) (connector true) ] in 
+    let field_lst = format_struct_helper fields (child_prefix (child_prefix prefix is_last) true) in 
+    struct_lst @ name_lst @ fields_lst @ field_lst
+
+and format_struct_helper fields prefix =
+    match fields with 
+    | [] -> []
+    | [ (name, typ) ] -> [ Printf.sprintf "%s%s Field { name = \"%s\", type = \"%s\" }" prefix (connector true) name typ ]
+    | (name, typ) :: t -> [ Printf.sprintf "%s%s Field { name = \"%s\", type = \"%s\" }" prefix (connector false) name typ ] 
+                            @ format_struct_helper t prefix
+and format_variant name cases prefix is_last =
+    let variant_lst = [ Printf.sprintf "%s%s VariantItem" prefix (connector is_last) ] in 
+    let name_lst = [ Printf.sprintf "%s%s name = %s" (child_prefix prefix is_last) (connector false) name ] in
+    let cases_lst = [ Printf.sprintf "%s%s Cases" (child_prefix prefix is_last) (connector true) ] in 
+    let case_lst = format_variant_helper cases (child_prefix (child_prefix prefix is_last) true) in 
+    variant_lst @ name_lst @ cases_lst @ case_lst
+
+and format_variant_helper cases prefix =
+    match cases with 
+    | [] -> []
+    | [ (name, fields) ] -> 
+            (match fields with
+            | [] ->  [ Printf.sprintf "%s%s Case { name = \"%s\" }" prefix (connector true) name ]
+            | fields -> [ Printf.sprintf "%s%s Case { name = \"%s\" }" prefix (connector true) name ] 
+            @ format_variant_case_helper fields (child_prefix prefix true))
+    | (name, fields) :: t -> 
+            (match fields with
+            | [] ->  [ Printf.sprintf "%s%s Case { name = \"%s\" }" prefix (connector false) name ] @ format_variant_helper t prefix
+            | fields -> [ Printf.sprintf "%s%s Case { name = \"%s\" }" prefix (connector false) name ]
+            @ format_variant_case_helper fields (child_prefix prefix false) @ format_variant_helper t prefix)
+    
+and format_variant_case_helper fields prefix =
+    match fields with 
+    | [] -> []
+    | [ (name, typ) ] -> [ Printf.sprintf "%s%s Field { name = \"%s\", type = \"%s\" }" prefix (connector true) name typ ]
+    | (name, typ) :: t -> [ Printf.sprintf "%s%s Field { name = \"%s\", type = \"%s\" }" prefix (connector false) name typ ] 
+                            @ format_variant_case_helper t prefix
 and format_program items = 
     let program_lst = [ "Program" ] in
     let items_lst = format_program_helper items "" in 

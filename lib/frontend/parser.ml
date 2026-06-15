@@ -472,7 +472,7 @@ and parse_field_item par =
     | Error e -> Error e
     | Ok (name, par') ->
         begin 
-            let tok = peek par in
+            let tok = peek par' in
             match tok.kind with 
             | Colon ->  let (_, par'') = next par' in 
                         begin 
@@ -493,6 +493,7 @@ and parse_field_items fields par =
                                 let fields' = (name, typ) :: fields in 
                                 let tok = peek par' in
                                 (match tok.kind with 
+                                | Identifier _ -> par' |> parse_field_items fields'
                                 | RightBrace -> par' |> parse_field_items fields'
                                 | _ -> Error ("expected '}' after field item", tok, par'))
                         end
@@ -504,18 +505,89 @@ and struct_item par =
     match expect_identifier par with
         | Error e -> Error e
         | Ok (name, par') -> 
-            let (tok, par') = next par' in 
+        let (tok, par'') = next par' in 
+            (match tok.kind with
+            | LeftBrace -> 
+                begin 
+                    let (_, par'') = next par' in
+                    match par'' |> parse_field_items [] with 
+                    | Error e -> Error e
+                    | Ok (fields, par') -> Ok (StructItem {name = name; fields = fields}, par')
+                end
+            | _ -> Error ("expected '{' after struct name", tok, par'))
+
+and parse_variant_case_helper fields par = 
+    let tok = peek par in 
+    match tok.kind with 
+    | Identifier _ -> begin (* more fields to parse *)
+                        match parse_field_item par with 
+                        | Error e -> Error e 
+                        | Ok ((name, typ), par') -> 
+                                let fields' = (name, typ) :: fields in 
+                                let tok = peek par' in
+                                (match tok.kind with
+                                | Comma -> let (_, par'') = next par' in 
+                                            par'' |> parse_variant_case_helper fields'
+                                | RightParen -> par' |> parse_variant_case_helper fields'
+                                | _ -> Error ("expected ',' or ')' after field", tok, par'))
+                        end
+    | RightParen -> let (_, par') = next par in 
+                    Ok (List.rev fields, par')
+    | _ -> Error ("expected ')' after fields", tok, par)
+
+and parse_variant_case par =
+    match expect_identifier par with (* variant case name *)
+    | Error e -> Error e
+    | Ok (case_name, par') -> 
+             let _ = Printf.printf "parse_variant_case: name = %s, next token = %s\n" case_name (peek par').lexeme in
+        begin 
+            let tok = peek par' in
+            match tok.kind with 
+            | LeftParen -> let (_, par'') = next par' in
+                            (match par'' |> parse_variant_case_helper [] with 
+                            | Error e -> Error e
+                            | Ok (fields, par''') -> Ok (case_name, fields, par'''))
+            | Identifier _ -> Ok (case_name, [], par') (* indicates that variant case holds no data -> we have another case to look at *)
+            | RightBrace -> Ok (case_name, [], par')
+            | _ -> Error ("expected '(' after variant case name or nothing for a variant that holds no data", tok, par')
+        end
+
+and parse_variant_cases cases par =
+    let _ = Printf.printf "parse_variant_cases: token = %s\n" (peek par).lexeme in
+
+    let tok = peek par in 
+    match tok.kind with 
+    | Identifier _ -> begin
+                        match parse_variant_case par with 
+                        | Error e -> print_endline "error"; Error e
+                        | Ok (case_name, fields, par') ->
+                            let cases' = (case_name, fields) :: cases in
+                            let tok = peek par' in 
+                                let _ = Printf.printf "parse_variant_cases: after case, token = %s\n" tok.lexeme in
+                            (match tok.kind with 
+                            | Identifier _ -> par' |> parse_variant_cases cases' (* more variant cases to handle *)
+                            | RightBrace -> par' |> parse_variant_cases cases'
+                            | _ -> Error ("expected variant case name or '}'", tok ,par'))
+                        end
+    | RightBrace -> let (_, par') = next par in (* consume } token *)
+                    Ok (List.rev cases, par')
+    | _ -> Error ("expected '}' after variant cases", tok, par)
+
+and variant_item par =
+        let _ = Printf.printf "variant_item: token = %s\n" (peek par).lexeme in
+    match expect_identifier par with
+        | Error e -> Error e
+        | Ok (name, par') -> (* variant name *)
+            let _ = Printf.printf "variant_item: name = %s, next token = %s\n" name (peek par').lexeme in
+            let (tok, par'') = next par' in 
                 (match tok.kind with
                 | LeftBrace -> 
                     begin 
-                        match parse_field_items [] par' with 
+                        match par'' |> parse_variant_cases [] with 
                         | Error e -> Error e
-                        | Ok (fields, par') -> Ok (StructItem {name = name; fields = fields}, par')
+                        | Ok (cases', par''') -> Ok (VariantItem {name = name; cases = cases'}, par''')
                     end
                 | _ -> Error ("expected '{' after struct name", tok, par'))
-
-
-
 
 and item par = 
     let tok = peek par in
@@ -528,23 +600,26 @@ and item par =
                 (match par' |> struct_item with 
                 | Error e -> Error e
                 | Ok (struct_item, par'') -> Ok (struct_item, par''))
+    | Variant -> let (_, par') = next par in 
+        let _ = Printf.printf "item: calling variant_item\n" in
+                (match par' |> variant_item with 
+                | Error e -> Error e
+                | Ok (variant_item, par'') -> Ok (variant_item, par''))
     | _ -> Error ("expected an item", tok, par)  (* this SHOULDN'T happen if we check for keywords before calling item -> 
                                                             if I forgot to add a item, then this error will remind me *)
 
 (* Parse Function *)
 
 let rec parse_helper items par =
-    let tok = peek par in
-    let _ = Printf.printf "parse_helper: token = %s, items = %d\n" tok.lexeme (List.length items) in
     if par |> is_at_end then        
         (items, par)
     else
         let tok = peek par in 
         match tok.kind with
-        | Fn -> (match par |> item with (* ensures that in item, we CANNOT reach wildcard case *)
+        | Fn | Struct | Variant -> (match par |> item with (* ensures that in item, we CANNOT reach wildcard case *)
                 | Error (msg, tok', par') -> (items, { par' with reporter = add_error tok'.pos msg par'.reporter }) (* needs better error handling *)
                 | Ok (item, par') -> par' |> parse_helper (item :: items))
-        | _ -> (items, { par with reporter = add_error tok.pos "expected an item: fn" par.reporter }) 
+        | _ -> (items, { par with reporter = add_error tok.pos "expected an item: fn, struct, variant" par.reporter }) 
 
 let parse par =
     let (items, par') = par |> parse_helper [] in 

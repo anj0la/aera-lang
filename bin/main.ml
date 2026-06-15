@@ -15,3 +15,4 @@ let () =
         print_endline "Welcome to Aera 0.1.0\nType 'quit' to exit.\n";
         Interpreter.repl ()
     | _ -> print_endline "error: expected file name with .aera extension. usage: aera <file>"
+

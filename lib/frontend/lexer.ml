@@ -328,6 +328,8 @@ let read_identifier lex =
         | "true"        -> lex' |> add_token True |> Result.ok
         | "false"       -> lex' |> add_token False |> Result.ok
         | "fn"          -> lex' |> add_token Fn |> Result.ok
+        | "struct"      -> lex' |> add_token Struct |> Result.ok
+        | "variant"     -> lex' |> add_token Variant |> Result.ok
         | "let"         -> lex' |> add_token Let |> Result.ok
         | "mut"         -> lex' |> add_token Mut |> Result.ok
         | "const"       -> lex' |> add_token Const |> Result.ok
