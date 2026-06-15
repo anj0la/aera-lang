@@ -167,7 +167,7 @@ The `return` expression exits a function and returns a value.
 ```aera
 for i in 0..10 {
     if cond {
-      return true # can omit the return keyword
+        return true # can omit the return keyword
     }
 }
 

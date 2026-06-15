@@ -118,7 +118,7 @@ fn divide(a: float64, b: float64) -> res!<float64, string> {
     ok(a / b)
 } 
 
-let result = divide(10.0, 2.0); 
+let result = divide(10.0, 2.0)
 
 match result { 
     ok(value) => print("Ok: {}", value)
@@ -200,7 +200,7 @@ A struct is a product type. It defines a compositie data type.
 They work similary to C / C++ structs, with the difference being that structs are immutable by default.
 
 ```aera
-struct Player = {
+struct Player {
     hp: int32
     name: string
 }

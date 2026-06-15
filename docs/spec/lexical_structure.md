@@ -103,8 +103,9 @@ a multi-line comment #>
 <# 
 This function returns the sum of two integers.
 #>
-fn add(a: int32, b: int32) -> int32:
+fn add(a: int32, b: int32) -> int32 {
     a + b
+}
 ```
 
 ## Whitespace
